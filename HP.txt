@@ -1,0 +1,119 @@
+integer reset_health_timer = 5;
+integer reset = FALSE;
+
+float bullet_resistant = 10;
+float full_resistance = 100;
+float event_timer = .01;
+float regeneration = 1;
+float health;
+
+vector health_color(integer A)
+{
+if(A> 900) return <0,1,0>;
+if(A> 500) return <1.000, 0.863, 0.000>;
+if(A> 200) return <1.000, 0.522, 0.106>;
+return <1,0,0>;
+}
+string text_health(integer A)
+{
+if(A> 950)return"██████████";  
+if(A> 900)return"█████████▒"; 
+if(A> 800)return"████████▒▒"; 
+if(A> 700)return"███████▒▒▒"; 
+if(A> 500)return"██████▒▒▒▒"; 
+if(A> 400)return"█████▒▒▒▒▒";  
+if(A> 300)return"████▒▒▒▒▒▒"; 
+if(A> 200)return"███▒▒▒▒▒▒▒"; 
+if(A> 100)return"██▒▒▒▒▒▒▒▒"; 
+          return"█▒▒▒▒▒▒▒▒▒";
+} 
+default
+{
+    on_rez(integer start_param)
+    {
+    llResetScript();
+    }
+    state_entry()
+    {  
+    reset = FALSE;
+    health = 1000;
+    llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); 
+    llSetText("▒▒▒▒▒▒▒▒▒▒",<0,0,0>,1);  
+    llSetTimerEvent(event_timer);
+    }
+    run_time_permissions(integer perm)
+    {
+      if (PERMISSION_TAKE_CONTROLS & perm)
+      {
+      llTakeControls( CONTROL_BACK|CONTROL_FWD, TRUE, TRUE );  
+      }
+    }
+    collision_start(integer times)
+    {
+      list d=llGetObjectDetails(llGetOwner(),[OBJECT_VELOCITY]);  
+      float full_damage = llVecMag(llList2Vector(d,0))+llVecMag(llGetVel());
+      if(full_damage>full_resistance)
+      {
+      health = health - full_damage;
+      return;
+      } 
+      float damage = llVecMag(llDetectedVel(0))+llVecMag(llGetVel());
+      if(damage>bullet_resistant)
+      {
+      health = health - damage;
+      return;
+      }
+    }
+    land_collision_start(vector where)
+    {
+      list d=llGetObjectDetails(llGetOwner(),[OBJECT_VELOCITY]);  
+      float full_damage = llVecMag(llList2Vector(d,0))+llVecMag(llGetVel());
+      if(full_damage>full_resistance)
+      {
+      health = health - full_damage;
+      return;
+      }
+    }
+    timer()
+    {
+    llSetText(text_health((integer)health),health_color((integer)health),1);   
+    if(health<=1)
+    {
+    llSetText("Dead",<1,0,0>,1);
+    llOwnerSay("You're Dead");     
+    state dead;
+    }
+    if(health<=990)
+    {
+    health = health+regeneration;
+    }
+    else
+    {
+    health = 1000;
+    }
+  }  
+}
+state dead
+{
+    touch_start(integer total_number)
+    {
+    if (llDetectedKey(0) == llGetOwner())
+    {       
+        if(reset == TRUE) 
+        {  
+        state default;
+        }
+        llOwnerSay("please wait for "+(string)reset_health_timer+" s");
+        }  
+    } 
+    state_entry()
+    {
+    llSetTimerEvent(reset_health_timer);
+    }
+    timer()
+    {
+    reset = TRUE; 
+    llSetTimerEvent(0);
+    llOwnerSay("click me to restart");  
+    }
+}

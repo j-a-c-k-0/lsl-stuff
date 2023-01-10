@@ -1,0 +1,143 @@
+integer flag =AGENT_LIST_REGION;
+list find_inventory;
+list blocked 
+=[
+"   ",
+"  ",
+" "
+];
+analyze0(string A,string B) 
+{
+    string name = llToLower(llList2String(llGetObjectDetails(B,[OBJECT_NAME]),0));
+    integer search_found = ~llSubStringIndex(A,llList2String(find_inventory, 0));
+    if (search_found)
+    { 
+    llOwnerSay("secondlife:///app/agent/"+B+"/about"+" [ inventory found = "+A+" = "+llList2String(find_inventory, 0)+" ]");   
+    return;
+    }
+    else
+    {     
+                     
+    }
+}
+inventory(key ID) 
+{
+        list attachments = llGetAttachedList(ID);
+        integer Length = llGetListLength(attachments);      
+        if (!Length)
+        {
+        return;
+        }
+        else
+        {
+            integer x;
+            for ( ; x < Length; x += 1)
+            {
+            string inventory_name = llToLower(llList2String(llGetObjectDetails(llList2Key(attachments, x),[OBJECT_NAME]),0));    
+            analyze0(inventory_name,ID);
+            }
+      } 
+}
+lookforagent() 
+{
+        list List = llGetAgentList(flag, []);
+        integer Length = llGetListLength(List);      
+        if (!Length)
+        {
+        return;
+        }
+        else
+        {
+            integer x;
+            for ( ; x < Length; x += 1)
+            {
+            inventory(llList2Key(List, x));
+            }
+      }
+      find_inventory = [];  
+}
+scan_uuid(key ID) 
+{
+        list attachments = llGetAttachedList(ID);
+        integer Length = llGetListLength(attachments); 
+        list details = llGetObjectDetails(ID, ([OBJECT_NAME,OBJECT_TOTAL_SCRIPT_COUNT,OBJECT_STREAMING_COST,OBJECT_SCRIPT_MEMORY]));
+        llOwnerSay("secondlife:///app/agent/"+(string)ID+"/about"
+            +" [ Attachments = "+(string)Length+" ]"
+            +"[ S = "+llList2String(details,1)+" ]"
+            +"[ G = "+(string)llList2Integer(details,2)+" ]"
+            +"[ M = "+llList2String(details,3)+" ]");
+        if (!Length)
+        {
+        return;
+        }
+        else
+        {
+            integer x;
+            for ( ; x < Length; x += 1)
+            {
+            list details = llGetObjectDetails(llList2Key(attachments, x), ([OBJECT_NAME,OBJECT_TOTAL_SCRIPT_COUNT,OBJECT_STREAMING_COST,OBJECT_SCRIPT_MEMORY]));
+            llOwnerSay(
+            "[ OBJECT_NAME = "+llList2String(details,0)+" ]"
+            +"[ SCRIPT_COUNT = "+llList2String(details,1)+" ]"
+            +"[ STREAMING_COST = "+(string)llList2Integer(details,2)+" ]"
+            +"[ SCRIPT_MEMORY = "+llList2String(details,3)+" ]"); 
+            }
+      } 
+}
+integer channelc = -0457934;  
+default
+{
+    state_entry()
+    {
+    llListen(channelc, "", "", "");
+    llRequestPermissions(llGetOwner(), PERMISSION_TAKE_CONTROLS);   
+    }
+    touch_start(integer total_number)
+    { 
+    if (llDetectedKey(0) == llGetOwner())
+    {
+    llTextBox(llDetectedKey(0), "enter inventory name or enter avatar uuid",channelc);
+    find_inventory = []; 
+    llSleep(0.5);  
+    }
+    }
+    run_time_permissions(integer perm)
+    {
+    if (PERMISSION_TAKE_CONTROLS & perm)
+    {
+    llTakeControls( CONTROL_BACK|CONTROL_FWD, TRUE, TRUE );  
+    }
+    }
+    listen(integer c,string n, key i, string m)
+    { 
+    if(llGetOwnerKey(i)==llGetOwner())
+    if (~llListFindList(blocked,[m])) 
+    {
+    return;
+    }
+    if(llGetOwnerKey(i)==llGetOwner())
+    if((key)m)
+    {  
+        vector agent = llGetAgentSize(m);
+        if(agent)
+        {
+        scan_uuid(m);
+        return;
+        }
+        else
+        {
+        llOwnerSay("[ Error agent not on region ]");
+        return;
+        }
+    }
+    if(llGetOwnerKey(i)==llGetOwner())
+    if (m)
+    {
+    string p = llToLower(m);    
+    find_inventory += (list)[p];
+    llSleep(0.2);  
+    lookforagent();
+    return;
+    }
+  }
+}

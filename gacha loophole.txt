@@ -1,0 +1,73 @@
+integer inventory_type = INVENTORY_SOUND; 
+integer counter_time = 50; 
+integer counter; 
+integer price = 15; 
+string random_item;
+random_items()
+{
+string Random = llGetInventoryName(inventory_type,llFloor(llFrand(llGetInventoryNumber(inventory_type))));
+random_item = Random;
+}
+text_display()
+{
+llSetText("timer : "+(string)counter+"\n"+"music : "+random_item,<1,1,1>,1);
+}
+default
+{
+    changed(integer change)
+    {
+      if (change & CHANGED_INVENTORY)         
+      {
+      llResetScript();
+      }     
+      if (change & CHANGED_REGION_START)         
+      {
+      llResetScript();    
+      }
+    }
+    on_rez(integer start_param) 
+    {
+    llResetScript();
+    }
+    state_entry()
+    {
+    random_items(); 
+    llSetTimerEvent(1);
+    llSetPayPrice(PAY_HIDE, [price ,PAY_HIDE, PAY_HIDE, PAY_HIDE]); 
+    text_display();
+    }
+    touch_start(integer number)
+    {
+    llRegionSayTo(llDetectedKey(0),0,"Click pay to play the Gatcha!");
+    llSleep(.5);
+    return;
+    }
+    money(key id, integer amount) 
+    {
+        if(amount != price)
+        {
+        llRegionSayTo(id,0,"You paid "+(string)amount+", which is the wrong amount, the price is: "+(string)price);
+        return;
+        }
+        counter = 0;
+        llRegionSayTo(id,0,"You Purchased " + ": " + random_item);
+        llGiveInventory(id, random_item);   
+        text_display();
+        random_items(); 
+        llSleep(.5);
+    }
+    timer()
+    {
+    if(counter>(counter_time-1))
+    {
+    counter = 0;
+    random_items();   
+    text_display();
+    }
+    else
+    {  
+    counter = counter+1;
+    text_display();
+    }
+  }  
+}

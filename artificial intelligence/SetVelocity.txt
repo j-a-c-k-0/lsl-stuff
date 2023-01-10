@@ -1,0 +1,158 @@
+list whitelist 
+=[
+"724098a3-a3f3-4fe4-8787-80aff7abe5a1",
+"ac1316d7-4842-44ff-816a-c6109cf7589b"
+];
+
+list Animation=["Aim","Hold","Run","Stand"];
+
+list die_animation=["dead0","dead1"];
+
+float health = 1000;
+float despawn = 10; 
+move_to(key avatar)
+{
+    list crux = llGetObjectDetails(avatar, ([OBJECT_POS, OBJECT_VELOCITY]));
+    llRotLookAt(llRotBetween(<1,0,0>,llVecNorm(llList2Vector(crux,0)+(llList2Vector(crux,1)*0)-llGetPos()+(llGetVel()*0.2))),0.2,1.0);    
+    float dist=llVecDist(llList2Vector(crux,0),llGetPos());     
+    dist=llVecDist(llList2Vector(crux,0),llGetPos());
+    if(dist>10)
+    {
+    llSetTimerEvent(0);    
+    llStartObjectAnimation(llList2String(Animation,2)); 
+    llStartObjectAnimation(llList2String(Animation,1));      
+    llStopObjectAnimation(llList2String(Animation,0));
+    llStopObjectAnimation(llList2String(Animation,3));  
+    llSetVelocity(llVecNorm(llList2Vector(crux,0)-llGetPos())*5,0);    
+    }
+    else
+    {
+    float dist=llVecDist(llList2Vector(crux,0),llGetPos());     
+    dist=llVecDist(llList2Vector(crux,0),llGetPos()); 
+    if(dist>5)
+    {   
+    llSetTimerEvent(.01);
+    llMessageLinked(2, 0,"shoot","");
+    llStopObjectAnimation(llList2String(Animation,2)); 
+    llStopObjectAnimation(llList2String(Animation,1));     
+    llStartObjectAnimation(llList2String(Animation,0));
+    llStartObjectAnimation(llList2String(Animation,3));    
+    llSetLinkPrimitiveParamsFast(3,[PRIM_NAME]+(string)avatar);
+    }
+    else
+    {   
+    llSetTimerEvent(.01);
+    llMessageLinked(2, 0,"shoot","");
+    llStartObjectAnimation(llList2String(Animation,2)); 
+    llStartObjectAnimation(llList2String(Animation,1));      
+    llStartObjectAnimation(llList2String(Animation,0));
+    llStopObjectAnimation(llList2String(Animation,3));
+    llSetVelocity(llVecNorm(llList2Vector(crux,0)-llGetPos())*-(10-dist),0);  
+    }
+  }
+}
+go_home()
+{
+    float dist=llVecDist((vector)llGetObjectDesc(),llGetPos());
+    dist=llVecDist((vector)llGetObjectDesc(),llGetPos());
+    if(dist>2)
+    {
+    llStartObjectAnimation(llList2String(Animation,2)); 
+    llStartObjectAnimation(llList2String(Animation,1));      
+    llStopObjectAnimation(llList2String(Animation,0));
+    llStopObjectAnimation(llList2String(Animation,3));  
+    llSetVelocity(llVecNorm((vector)llGetObjectDesc()-llGetPos())*5,0);  
+    llRotLookAt(llRotBetween(<1,0,0>,llVecNorm((vector)llGetObjectDesc()+(llGetVel()*0)-llGetPos()+(llGetVel()*0.2))),0.2,1.0);      
+    }
+    else
+    {  
+    llStopObjectAnimation(llList2String(Animation,0));
+    llStopObjectAnimation(llList2String(Animation,2));     
+    llStartObjectAnimation(llList2String(Animation,3));
+    llStartObjectAnimation(llList2String(Animation,1));
+    }
+}
+startup()
+{
+    llSetTimerEvent(0);
+    llSetRot(ZERO_ROTATION); 
+    llSetObjectDesc((string)llGetPos());
+    llSetStatus(STATUS_DIE_AT_EDGE,TRUE);
+    llSensorRepeat("","",AGENT,50,PI,0.1); 
+    llStopObjectAnimation(llList2String(Animation,0));
+    llStopObjectAnimation(llList2String(Animation,2));     
+    llStartObjectAnimation(llList2String(Animation,3));
+    llStartObjectAnimation(llList2String(Animation,1));
+    llSetStatus( STATUS_ROTATE_X | STATUS_ROTATE_Y, FALSE);
+}
+Dead()
+{
+        llSensorRemove();
+        llSetLinkPrimitiveParamsFast(4,[PRIM_DESC]+"dead"); 
+        llStopObjectAnimation(llList2String(Animation,0));  
+        llStopObjectAnimation(llList2String(Animation,1));  
+        llStopObjectAnimation(llList2String(Animation,2)); 
+        llStopObjectAnimation(llList2String(Animation,3));
+        llStartObjectAnimation(llList2String(die_animation,llFloor(llFrand(llGetListLength(die_animation)))));  
+        llSleep(despawn);    
+        llDie();
+}
+aim_target()
+{
+        list target =llGetLinkPrimitiveParams( 3,[PRIM_NAME]);  
+        list crux = llGetObjectDetails(llList2String(target,0), ([OBJECT_POS, OBJECT_VELOCITY]));
+        vector ovF = llVecNorm(llList2Vector(crux,0)+(llList2Vector(crux,1)*0)-llGetPos()+(llGetVel()*0.2));
+        float u = ovF.x;
+        float m = ovF.y;
+        float x = ovF.z;    
+        llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llRotBetween(<0,0,1>,<u,m,x>/  llGetLocalRot() )]);
+}
+default
+{
+    on_rez(integer start_param)
+    {
+    llResetScript();
+    }
+    state_entry()
+    {  
+    startup();
+    }
+    sensor(integer num_detected)
+    {
+    if (~llListFindList(whitelist,[(string)llDetectedKey(0)])) 
+    { 
+    go_home();
+    }
+    else
+    { 
+    move_to(llDetectedKey(0));  
+    }
+    }
+    collision_start(integer times)
+    {
+    float damage = llVecMag(llDetectedVel(0))+llVecMag(llGetVel());
+    health = health - damage;
+    if(health<=1)
+    {
+    Dead();
+    }
+    }
+    land_collision_start(vector where)
+    {
+    
+    float damage = llVecMag(llDetectedVel(0))+llVecMag(llGetVel());
+    health = health - damage;
+    if(health<=1)
+    {
+    Dead();
+    }
+    }
+    no_sensor() 
+    {      
+    go_home();
+    }
+    timer()
+    {
+    aim_target();
+    }
+}

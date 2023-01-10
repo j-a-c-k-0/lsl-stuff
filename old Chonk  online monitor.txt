@@ -1,0 +1,107 @@
+list agent_list 
+=[
+"8562eb25-0a93-4c6d-9a9e-380fb123a571|Christoph Naumova",
+"ce345f6a-d4de-41ed-9c8c-591afef8f721|Zilkas (shiro.digfoot)",
+"710aa641-d366-4c8e-9862-2d843b2b7edd|SALEM (auxiliary.owo)",
+"9b77149c-81de-4f9e-a73b-190d812196b9|Octavius (darkwoof.dighno)",
+"c53f5d48-9e06-488b-9c7c-8dfe27e35248|D e m i  出美 (possumpompadour)",
+"24d2dba5-e0e9-42f4-99c8-508329496dde|ｓｃｈｉｍ (seraph.forsythe)",
+"25886bb4-0bd9-43de-8246-ed345b584a1b|Roxie Dae (daewizzle)",
+"9c0d9aea-7abf-4da0-82c3-4158388de19d|Graqwa",
+"45b0d89c-3018-4b6f-9637-3370e92810c4|Chad Sassypants",
+"820c53c9-081f-4adb-af06-bb2874e8ce46|Dovero (kirbys246)",
+"7ef45e3c-e751-4a2f-b4e1-2e0aad983534|Loppy Bunny",
+"e2614bf5-79ce-4ab8-8d91-b601375b0b35|ιzzιє яαє (kiahhla)",
+"b88157ef-1ab7-4ae8-be7f-f1d78bab1ef8|Aven Kuroe",
+"8b99083c-9c2b-42cc-8f7b-7f19fa2c7515|Julian Kazakar (tone.defarge)",
+"694a9c1a-ddf3-42a9-956e-3ed162abeb5c|R o b u (roomba.dismantled)",
+"ce058e6e-c6cc-405a-9420-413f61f38f8f|Daiza Dowren",
+"22decd3d-83aa-4271-97bb-39f10a1d227c|Sirus McMahon",
+"940acf25-6105-48be-9a44-80441219dd12|мoхιe мαe (khumi)"
+];
+float timer_delayrequest =3;
+string temporary;
+integer crux0;
+list offline;
+list online;
+integer x;
+integer r;
+message(string m)
+{ 
+llOwnerSay(m);
+}
+request()
+{ 
+     integer Lengthx = llGetListLength(agent_list);
+     if (x < Lengthx) 
+     {
+     list items = llParseString2List(llList2String(agent_list, x), ["|"], []);
+     llRequestAgentData(llList2String(items,0), DATA_ONLINE);
+     temporary = llList2String(agent_list, x);
+     x += 1;
+     }
+     else
+     {
+     x = 0;  
+     }
+}
+A0(string s)
+{ 
+    if (!~llListFindList(online, [s]))
+    {
+    llSetText(s+" is online.", <0,1,0>,1); 
+    message(s+" is online.");
+    online += (list)s;
+    llSleep(1);
+    llSetText("", <1,1,1>,1);
+    }
+    if (~llListFindList(offline, [s]))
+    { 
+    r = llListFindList(offline,[s]);
+    offline = llDeleteSubList(offline, r,r);
+    }
+}
+A1(string s)
+{ 
+    if (!~llListFindList(offline, [s]))
+    {
+    llSetText(s+" is offline.", <1,0,0>,1);
+    message(s+" is offline.");
+    offline += (list)s;
+    llSleep(1);
+    llSetText("", <1,1,1>,1);
+    }
+    if (~llListFindList(online, [s]))
+    { 
+    r = llListFindList(online,[s]);
+    online = llDeleteSubList(online, r,r);
+    }
+}
+default
+{
+    on_rez(integer start_param) 
+    {
+    llResetScript();
+    }  
+    state_entry()
+    {
+    llSetText("", <1,1,1>,1);
+    llSetTimerEvent(timer_delayrequest);
+    }
+    timer()
+    { 
+    request();
+    }
+    dataserver(key queryid, string data)
+    {
+        list items = llParseString2List(temporary, ["|"], []);
+        if (data == "1") 
+        {
+        A0(llList2String(items,1));
+        }
+        else
+        {
+        A1(llList2String(items,1));
+        }
+    }
+}
