@@ -1,0 +1,98 @@
+integer flag =AGENT_LIST_REGION;
+
+list species
+=[
+"Husky",
+"crux",
+"sergal",
+"Fox",
+"Wolf",
+"Dog",
+"Dragon",
+"Cat",
+"Tiger",
+"Lion",
+"Raccoon",
+"Rabbit",
+"Skunk",
+"Bear",
+"Horse",
+"Coyote",
+"Cheetah",
+"Hyena",
+"Leopard",
+"Kangaroo",
+"Bird",
+"Rat",
+"Gryphon",
+"Leopard",
+"Lynx",
+"Ferret",
+"Cougar",
+"Dinosaur",
+"Squirrel",
+"Jackal",
+"Deer",
+"Bat",
+"Otter"
+];
+
+inventory(key ID) 
+{
+        list attachments = llGetAttachedList(ID);
+        integer Length = llGetListLength(attachments);      
+        if (!Length)
+        {
+        return;
+        }
+        else
+        {
+            integer x;
+            for ( ; x < Length; x += 1)
+            {
+            string inventory_name = llToLower(llList2String(llGetObjectDetails(llList2Key(attachments, x),[OBJECT_NAME]),0));
+            string name = llToLower(llList2String(llGetObjectDetails(ID,[OBJECT_NAME]),0));
+            
+            integer speciesLength = llGetListLength(species);
+            integer c;
+            for ( ; c < speciesLength; c += 1)
+            {
+               string species_name = llToLower(llList2String(species,c));    
+               integer found0 = ~llSubStringIndex(inventory_name,species_name);
+               if (found0)
+               {
+               llSay(0,"[ name : "+name+" ]"+"[ species : "+llList2String(species,c)+" ]");               
+               return;
+               }
+
+               }
+            } 
+            string name = llToLower(llList2String(llGetObjectDetails(ID,[OBJECT_NAME]),0));
+            llSay(0,"[ name : "+name+" ]"+"[ species : unknown ]");
+            return;            
+            }  
+}
+lookforagent() 
+{
+        list List = llGetAgentList(flag, []);
+        integer Length = llGetListLength(List);      
+        if (!Length)
+        {
+        return;
+        }
+        else
+        {
+            integer x;
+            for ( ; x < Length; x += 1)
+            {
+            inventory(llList2Key(List, x));
+            }
+      }
+}
+default
+{
+    touch_start(integer total_number)
+    {
+    lookforagent();
+    }
+}
