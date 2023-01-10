@@ -1,4 +1,4 @@
-key owner = "fe61e4d8-e195-4166-a7f7-ba163964b992";
+key owner = "xxxx";
 string encryption_password = "12";
 string ReturnObjectByAgentAbsence;
 string ReturnObjectByRezzCount;
