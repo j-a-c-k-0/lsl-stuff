@@ -5,7 +5,7 @@ list uuid;
 
 list send_message_list 
 =[
-"fe61e4d8-e195-4166-a7f7-ba163964b992"//jack
+"xxxx"
 ];
 
 integer D = 86400;
