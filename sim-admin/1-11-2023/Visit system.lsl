@@ -5,12 +5,12 @@ list uuid;
 
 list known_list 
 =[
-"fe61e4d8-e195-4166-a7f7-ba163964b992"//jack
+"xxxx"
 ];
 
 list send_message_list
 =[
-"fe61e4d8-e195-4166-a7f7-ba163964b992"//jack
+"xxxx"
 ];
 
 string agent(string A)
