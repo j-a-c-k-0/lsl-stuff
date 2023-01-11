@@ -1,8 +1,5 @@
-list ignore 
-=[
-""
-];
-key group = "XXXX";
+list ignore = [""];
+key group = "";
 string encryption_password = "12";
 integer Channel = 2;
 default
