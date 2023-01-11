@@ -76,7 +76,7 @@ Object_Moderation()
       {       
         if (~llListFindList(temp_whitelist,[llList2String(TempList, z)])){ }else
         {
-          string crypt = llXorBase64(llStringToBase64("return_object_by_message_owner"+"|"+llList2String(TempList, z)),llStringToBase64(encryption_password)); 
+          string crypt = llXorBase64(llStringToBase64("return_object_by_owner"+"|"+llList2String(TempList, z)),llStringToBase64(encryption_password)); 
           vector agent = llGetAgentSize(llList2String(TempList,z));
           if(agent)
           { 
