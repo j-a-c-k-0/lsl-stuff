@@ -1,4 +1,4 @@
-string WEBHOOK_URL = "XXXX";
+string WEBHOOK_URL = "";
 string authentication;
 string url;
 integer limit_attempt = 3;
