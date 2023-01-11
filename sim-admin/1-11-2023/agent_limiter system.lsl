@@ -5,7 +5,7 @@ integer flag = AGENT_LIST_REGION;
 integer streaminglimit = 3500;
 integer scriptlimit = 500;
 integer event_timer = 3;
-integer relay = 678445;
+integer relay = 12345;
 
 message(string message)
 {
