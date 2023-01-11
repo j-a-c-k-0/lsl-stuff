@@ -3,15 +3,9 @@ integer E = 3;
 integer r;
 list uuid;
 
-list known_list 
-=[
-"XXXX"
-];
+list known_list = [""];
 
-list send_message_list
-=[
-"XXXX"
-];
+list send_message_list = [""];
 
 string agent(string A)
 {
