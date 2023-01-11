@@ -1,6 +1,6 @@
 list ignore = [""];
 key owner = "";
-integer Channel = 678445;
+integer Channel = 12345;
 default
 {
     changed(integer change)
