@@ -1,8 +1,8 @@
-key message_owner = "XXXX";
+key message_owner = "";
 string encryption_password = "12";
 string ReturnObjectByAgentAbsence;
 string ReturnObjectByRezzCount;
-string WEBHOOK_URL = "XXXX";
+string WEBHOOK_URL = "";
 integer dialog_channel = 1;
 integer rely_channel = 2;
 integer rezzwarning = 1800;
