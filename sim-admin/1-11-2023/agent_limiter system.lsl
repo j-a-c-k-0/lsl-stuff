@@ -1,9 +1,6 @@
 list only_once1;
 list only_once0;
-list whitelist 
-=[
-"fe61e4d8-e195-4166-a7f7-ba163964b992"//jack
-];
+list whitelist =[""];
 integer flag = AGENT_LIST_REGION;
 integer streaminglimit = 3500;
 integer scriptlimit = 500;
