@@ -5,7 +5,7 @@ string ReturnObjectByRezzCount;
 string WEBHOOK_URL = "XXXX";
 integer dialog_channel = 1;
 integer rely_channel = 2;
-integer rezzwarning = 1800;
+integer rezzwarning = 1000;
 integer rezzlimit = 2000;
 integer event_time = 3;
 integer chanhandlr;
@@ -45,7 +45,7 @@ rezz_limiter(key id,integer count,string crypt)
     if(count> rezzwarning && (integer)count< rezzlimit )
     {
     llRegionSay(rely_channel,crypt); 
-    llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzlimit); 
+    llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzwarning); 
     }
     if((integer)count> rezzlimit)
     {
