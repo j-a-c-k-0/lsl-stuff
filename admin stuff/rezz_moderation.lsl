@@ -1,19 +1,19 @@
 key message_owner = "XXXX";
+string WEBHOOK_URL = "XXXX";
 string encryption_password = "12";
 string ReturnObjectByAgentAbsence;
 string ReturnObjectByRezzCount;
-string WEBHOOK_URL = "XXXX";
 integer dialog_channel = 1;
 integer rely_channel = 2;
 integer rezzwarning = 1000;
 integer rezzlimit = 2000;
+integer message_mode = 2;
 integer event_time = 3;
 integer chanhandlr;
-integer message_mode = 2;
 float banned_time_hour = 1.0;
-list users =[];
+list users =[""];
+list whitelist =[""];
 list temp_whitelist;
-list whitelist =[];
 message_mode1(string Message)
 {
 key http_request_id = llHTTPRequest(WEBHOOK_URL,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
@@ -69,12 +69,10 @@ rezz_limiter(key id,integer count,string crypt)
 }
 Object_Moderation() 
 {    
-  list TempList = llGetParcelPrimOwners(llGetPos());
-  integer Length = llGetListLength(TempList);
-  if (!Length){ return; }else
+  list TempList = llGetParcelPrimOwners(llGetPos()); 
+  integer Length = llGetListLength(TempList); if (!Length){ return; }else
   {
-    integer z;
-    for ( ; z < Length; z += 2)
+    integer z; for ( ; z < Length; z += 2)
     {
       if (~llListFindList(whitelist,[llList2String(TempList, z)])){ }else
       {       
@@ -110,14 +108,14 @@ llDialog(id,"\n"+
 "[1] ReturnObjectByAgentAbsence Status : " + ReturnObjectByAgentAbsence
 +"\n"+
 "[2] ReturnObjectByRezzCount Status : " + ReturnObjectByRezzCount
-,["[1] on/off","[2] on/off","Whitelist","close"], dialog_channel);
+,["[1] on/off","[2] on/off","add-temp","close"], dialog_channel);
 llSleep(.2);
 }
 status_startup() 
 {
-list target0 =llGetLinkPrimitiveParams(2,[PRIM_DESC]);      
+list target0 =llGetLinkPrimitiveParams(2,[PRIM_DESC]);
 if("1"== llList2String(target0,0)){ ReturnObjectByAgentAbsence = "active"; }else{ ReturnObjectByAgentAbsence = "deactivate";}
-list target1 =llGetLinkPrimitiveParams(3,[PRIM_DESC]);      
+list target1 =llGetLinkPrimitiveParams(3,[PRIM_DESC]);
 if("1"== llList2String(target1,0)) { ReturnObjectByRezzCount = "active"; }else{ ReturnObjectByRezzCount = "deactivate"; }
 }
 default
@@ -151,6 +149,10 @@ default
     {
     if (~llListFindList(users,[(string)id]))
     {
+      if(message == "close")
+      {
+      return;
+      }
       if(message == "[1] on/off")
       {
         if(ReturnObjectByAgentAbsence == "deactivate")
@@ -181,28 +183,33 @@ default
         show_dialog(id); 
         return;
       } 
-      if(message == "Whitelist")
+      if(message == "add-temp")
       {
-      random_channel();    
+      random_channel();
       llTextBox(id, "Please insert a uuid to be added."+"\n"+"\n"+
       "please be aware this is only temporary.", dialog_channel);
       return;
       }
       if((key)message)
       {
-        if (!~llListFindList(temp_whitelist, [message]))
-        {
-        llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" added"); temp_whitelist += message;    
-        llInstantMessage(message_owner,"secondlife:///app/agent/"+(string)id+"/about has added : " +
-        "secondlife:///app/agent/"+message+"/about on whitelist"); random_channel();
-        show_dialog(id);
-        return;
-        }
-        else
-        { 
-        random_channel();
-        llTextBox(id,"\n"+"\n"+"uuid already existed.", dialog_channel);
-        }
+         if (!~llListFindList(temp_whitelist, [message]))
+         {
+         llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" added"); temp_whitelist += message;    
+         llInstantMessage(message_owner,"secondlife:///app/agent/"+(string)id+"/about has added : " +
+         "secondlife:///app/agent/"+message+"/about on temp-list"); random_channel();
+         show_dialog(id);
+         return;
+         }
+         else
+         { 
+         random_channel();
+         llTextBox(id,"\n"+"\n"+"uuid already existed.", dialog_channel);
+         }
+      }
+      else
+      {
+      random_channel();
+      llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
       }
     }
   }
