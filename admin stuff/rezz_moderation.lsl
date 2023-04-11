@@ -162,11 +162,7 @@ default
     temp_whitelist = [];
     return;
     }
-    if (change & CHANGED_INVENTORY)
-    {
-    llResetScript();
-    }
-  } 
+  }
   on_rez(integer start_param) 
   {
   llResetScript();
