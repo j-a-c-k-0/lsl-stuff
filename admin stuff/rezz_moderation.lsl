@@ -26,7 +26,6 @@ string error_message;
 string memory_result;
 key notecardQueryId;
 key notecardKey;
-key keyUUID;
 
 ReadNotecard()
 {
