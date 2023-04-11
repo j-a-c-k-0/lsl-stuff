@@ -12,10 +12,11 @@ integer rezzlimit = 2000;
 float banned_time_hour = 1.0;
 
 string WEBHOOK_URL = "XXXX";
-integer webhook_message = TRUE;
+integer webhook_message = FALSE;
 integer message_mode = 2;
 
 integer safe_fail_trigger = TRUE;
+integer dialog_option = FALSE;
 integer event_time = 3;
 integer notecardLine;
 integer chanhandlr;
@@ -64,9 +65,8 @@ HTTP_PRAGMA_NO_CACHE,TRUE],llList2Json(JSON_OBJECT,json));
 }
 string get_username(key id)
 {
-list details = llGetObjectDetails(id, ([OBJECT_NAME])); 
 vector agent = llGetAgentSize(id);
-if(agent){ return llList2String(details,0); }else{ return id;} 
+if(agent){ return llKey2Name(id); }else{ return id;}
 }
 rezz_limiter(key id,integer count,string crypt) 
 { 
@@ -81,10 +81,7 @@ rezz_limiter(key id,integer count,string crypt)
     llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
     llTeleportAgentHome(id);
     llAddToLandBanList(id,banned_time_hour);
-    if(webhook_message == FALSE) 
-    {
-    return;
-    }
+    if(webhook_message == FALSE) { return; }
     if(message_mode == 1)
     {
     message_mode1(
@@ -136,14 +133,20 @@ chanhandlr = llListen(dialog_channel, "", NULL_KEY, "");
 show_dialog(key id)
 {
 random_channel();
-llDialog(id,"memory : "+memory_result+"\n\n"+
-"[1] ReturnObjectByAgentAbsence Status : " + ReturnObjectByAgentAbsence
-+"\n"+
-"[2] ReturnObjectByRezzCount Status : " + ReturnObjectByRezzCount
-,["[1] on/off","[2] on/off","add-temp","close"," ","erase-temp"], dialog_channel);
+dialog_option = FALSE; 
+llDialog(id,"memory : "+memory_result+"\n\n"+"[1] ReturnObjectByAgentAbsence Status : " + ReturnObjectByAgentAbsence
++"\n"+"[2] ReturnObjectByRezzCount Status : " + ReturnObjectByRezzCount
+,["erase-temp","[2] on/off","add-temp","close","[1] on/off","option"], dialog_channel);
 llSleep(.2);
 }
-status_startup() 
+show_dialog_option(key id)
+{
+random_channel();
+dialog_option = TRUE;
+llDialog(id,"option.",["return-object","reset-script","menu"], dialog_channel);
+llSleep(.2);
+}
+status_startup()
 {
 list target0 =llGetLinkPrimitiveParams(2,[PRIM_DESC]);
 if("1"== llList2String(target0,0)){ ReturnObjectByAgentAbsence = "active"; }else{ ReturnObjectByAgentAbsence = "deactivate";}
@@ -152,129 +155,168 @@ if("1"== llList2String(target1,0)) { ReturnObjectByRezzCount = "active"; }else{ 
 }
 default
 {
-    changed(integer change)
+  changed(integer change)
+  {
+    if (change & CHANGED_REGION_START)
     {
-       if (change & CHANGED_REGION_START)
-       {
-       temp_whitelist = [];
-       return;
-       }
-       if (change & CHANGED_INVENTORY)
-       {
-       llResetScript();
-       } 
+    temp_whitelist = [];
+    return;
     }
-    on_rez(integer start_param) 
+    if (change & CHANGED_INVENTORY)
     {
     llResetScript();
     }
-    state_entry()
-    {
-    llSetText("",<0,0,0>,0);     
-    ReadNotecard();
-    } 
-    touch_start(integer num_detected)
-    {
-    if (~llListFindList(users,[(string)llDetectedKey(0)]))
-    {
-        if(safe_fail_trigger == FALSE) 
-        {   
-        show_dialog(llDetectedKey(0)); 
-        return;
-        }
-        else
-        {
-        llDialog(llDetectedKey(0),"\n"+error_message+"\n",["error :("], dialog_channel);
-        llSleep(.2);
-        return;
-        }
+  } 
+  on_rez(integer start_param) 
+  {
+  llResetScript();
+  }
+  state_entry()
+  {
+  llSetText("",<0,0,0>,0);     
+  ReadNotecard();
+  } 
+  touch_start(integer num_detected)
+  {
+    if (~llListFindList(users,[(string)llDetectedKey(0)])){ if(safe_fail_trigger == FALSE) 
+    { 
+    show_dialog(llDetectedKey(0)); return;
     }
-}
-listen(integer channel, string name, key id, string message)
-{
-if(safe_fail_trigger == FALSE) 
-{  
-    if(llGetOwnerKey(id)==owner){ if(message == "safe_fail")
+    else
     {
-    error_message ="safe_fail_trigger";     
-    safe_fail_trigger = TRUE;
-    llSetTimerEvent(0);
-    llSetText("safe_fail_trigger",<1,0,0>,1);
+    llDialog(llDetectedKey(0),"\n"+error_message+"\n",["error :("], dialog_channel); llSleep(.2); return; }
     }
+  }
+  listen(integer channel, string name, key id, string message)
+  {
+  if(safe_fail_trigger == FALSE) 
+  {
+      if(llGetOwnerKey(id)==owner){ if(message == "safe_fail")
+      { 
+      llSetTimerEvent(0);
+      safe_fail_trigger = TRUE;
+      error_message ="safe_fail_trigger";
+      llSetText("safe_fail_trigger",<1,0,0>,1);
+      return;
+      }
   }
   if (~llListFindList(users,[(string)id]))
   {
-      if(message == " "){ show_dialog(id); return; }
-      if(message == "close"){ return; }
-      if(message == "erase-temp")
-      {
-      temp_whitelist = [];    
-      show_dialog(id); 
-      return;
-      } 
-      if(message == "[1] on/off")
-      {
-        if(ReturnObjectByAgentAbsence == "deactivate")
+    if(message == "menu"){ show_dialog(id); return; } 
+    if(message == "close"){ dialog_option = FALSE; return; }
+    if(dialog_option == TRUE) 
+    { 
+        if(message == "reset-script")
         {
-        llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"1"]);   
-        ReturnObjectByAgentAbsence = "active";
+        llResetScript();
         }
-        else
+        if(message == "return-object")
         {
-        llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); 
-        ReturnObjectByAgentAbsence = "deactivate";
-        }
-        show_dialog(id); 
+        llTextBox(id, "Please insert a uuid."+"\n"+"\n"+
+        "Warning you're trying to return objects.", dialog_channel);
         return;
-      }   
-      if(message == "[2] on/off")
-      {
-        if(ReturnObjectByRezzCount == "deactivate")
-        {
-        llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"1"]); 
-        ReturnObjectByRezzCount = "active";
         }
-        else
+        if((key)message)
         {
-        llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"0"]);   
-        ReturnObjectByRezzCount = "deactivate";
-        }
-        show_dialog(id); 
-        return;
-      } 
-      if(message == "add-temp")
-      {
-      llTextBox(id, "Please insert a uuid to be added."+"\n"+"\n"+
-      "please be aware this is only temporary.", dialog_channel);
-      return;
+            if (!~llListFindList(whitelist, [message]))
+            {
+            llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" object returned");  
+            string crypt = llXorBase64(llStringToBase64("return_object_by_owner"+"|"+message),llStringToBase64(encryption_password)); 
+            llRegionSay(rely_channel,crypt);
+            show_dialog_option(id);
+            return;
+            }
+            else
+            {
+            llTextBox(id,"\n"+"\n"+"could not return object.", dialog_channel);
+            return;
+            }
+          }
+          else
+          {
+          llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
+          return;
+          } 
       }
-      if((key)message)
+      if(dialog_option == FALSE) 
       {
-         if (!~llListFindList(temp_whitelist, [message]))
-         {
-         llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" added"); temp_whitelist += message;
-         show_dialog(id);
-         return;
+        if(message == "option")
+        {
+        show_dialog_option(id);
+        return;
+        }
+        if(message == "[1] on/off")
+        {
+          if(ReturnObjectByAgentAbsence == "deactivate")
+          {
+          llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"1"]);   
+          ReturnObjectByAgentAbsence = "active";
+          }
+          else
+          {
+          llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); 
+          ReturnObjectByAgentAbsence = "deactivate";
+          }
+          show_dialog(id); 
+          return;
+        }   
+        if(message == "[2] on/off")
+        {
+          if(ReturnObjectByRezzCount == "deactivate")
+          {
+          llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"1"]); 
+          ReturnObjectByRezzCount = "active";
+          }
+          else
+          {
+          llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"0"]);   
+          ReturnObjectByRezzCount = "deactivate";
+          }
+          show_dialog(id); 
+          return;
+        } 
+        if(message == "add-temp")
+        {
+        llTextBox(id, "Please insert a uuid to be added."+"\n"+"\n"+
+        "please be aware this is only temporary.", dialog_channel);
+        return;
+        } 
+        if(message == "erase-temp")
+        {
+        llRegionSayTo(id,0,"cleared temporarily list.");   
+        temp_whitelist = [];    
+        show_dialog(id); 
+        return;
+        }
+        if((key)message)
+        {
+           if (!~llListFindList(temp_whitelist, [message]))
+           {
+           llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" temp add");
+           temp_whitelist += message; 
+           show_dialog(id);
+           return;
+           }
+           else
+           {
+           llTextBox(id,"\n"+"\n"+"uuid already existed.", dialog_channel);
+           return;
+           }
          }
          else
          {
-         llTextBox(id,"\n"+"\n"+"uuid already existed.", dialog_channel);
+         llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
+         return;
          }
-      }
-      else
-      {
-      llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
-      }
-    }
-  }
-}
-dataserver(key query_id, string data)
-{
-        if (query_id == notecardQueryId)
-        {
-            if (data == EOF)
-            {
-            llSetText("",<0,0,0>,0);  
+       }
+     }
+   }
+ }
+ dataserver(key query_id, string data)
+ {
+   if (query_id == notecardQueryId){ if (data == EOF)
+   {
+           llSetText("",<0,0,0>,0);  
             memory_result =(string)llGetFreeMemory();    
             llListen(rely_channel,"","","");
             llSetTimerEvent(event_time); 
