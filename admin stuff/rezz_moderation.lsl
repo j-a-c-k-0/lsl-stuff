@@ -1,19 +1,50 @@
-key message_owner = "XXXX";
-string WEBHOOK_URL = "XXXX";
-string encryption_password = "12";
-string ReturnObjectByAgentAbsence;
-string ReturnObjectByRezzCount;
+list users =[""];
+list temp_whitelist;
+list whitelist;
+
 integer dialog_channel = 1;
 integer rely_channel = 2;
+string encryption_password = "12";
+key owner = "XXXX";
+
 integer rezzwarning = 1000;
 integer rezzlimit = 2000;
-integer message_mode = 2;
-integer event_time = 3;
-integer chanhandlr;
 float banned_time_hour = 1.0;
-list users =[""];
-list whitelist =[""];
-list temp_whitelist;
+
+string WEBHOOK_URL = "XXXX";
+integer webhook_message = TRUE;
+integer message_mode = 2;
+
+integer safe_fail_trigger = TRUE;
+integer event_time = 3;
+integer notecardLine;
+integer chanhandlr;
+string notecardName = "whitelist";
+string ReturnObjectByAgentAbsence;
+string ReturnObjectByRezzCount;
+string error_message;
+string memory_result;
+key notecardQueryId;
+key notecardKey;
+key keyUUID;
+
+ReadNotecard()
+{
+    if (llGetInventoryKey(notecardName) == NULL_KEY)
+    {
+    llSetTimerEvent(0);   
+    safe_fail_trigger = TRUE;
+    error_message = "notecard_exception";     
+    llSetText("Notecard '" + notecardName + "' missing or unwritten.",<1,0,0>,1);
+    return;
+    }
+    else if (llGetInventoryKey(notecardName) == notecardKey) return;
+    notecardKey = llGetInventoryKey(notecardName);
+    notecardQueryId = llGetNotecardLine(notecardName, notecardLine);
+    llSetText("reading notecard...",<1,0,1>,1); 
+}
+
+
 message_mode1(string Message)
 {
 key http_request_id = llHTTPRequest(WEBHOOK_URL,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
@@ -53,6 +84,10 @@ rezz_limiter(key id,integer count,string crypt)
     llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
     llTeleportAgentHome(id);
     llAddToLandBanList(id,banned_time_hour);
+    if(webhook_message == FALSE) 
+    {
+    return;
+    }
     if(message_mode == 1)
     {
     message_mode1(
@@ -104,11 +139,11 @@ chanhandlr = llListen(dialog_channel, "", NULL_KEY, "");
 show_dialog(key id)
 {
 random_channel();
-llDialog(id,"\n"+
+llDialog(id,"memory : "+memory_result+"\n\n"+
 "[1] ReturnObjectByAgentAbsence Status : " + ReturnObjectByAgentAbsence
 +"\n"+
 "[2] ReturnObjectByRezzCount Status : " + ReturnObjectByRezzCount
-,["[1] on/off","[2] on/off","add-temp","close"], dialog_channel);
+,["[1] on/off","[2] on/off","add-temp","close"," ","erase-temp"], dialog_channel);
 llSleep(.2);
 }
 status_startup() 
@@ -122,10 +157,15 @@ default
 {
     changed(integer change)
     {
-       if (change & CHANGED_REGION_START)         
+       if (change & CHANGED_REGION_START)
        {
-       llResetScript();    
+       temp_whitelist = [];
+       return;
        }
+       if (change & CHANGED_INVENTORY)
+       {
+       llResetScript();
+       } 
     }
     on_rez(integer start_param) 
     {
@@ -133,26 +173,48 @@ default
     }
     state_entry()
     {
-    random_channel();   
-    llSetTimerEvent(event_time); 
-    status_startup(); 
+    llSetText("",<0,0,0>,0);     
+    ReadNotecard();
     } 
     touch_start(integer num_detected)
     {
-       if (~llListFindList(users,[(string)llDetectedKey(0)]))
-       {
-       show_dialog(llDetectedKey(0)); 
-       return;
-       }
+    if (~llListFindList(users,[(string)llDetectedKey(0)]))
+    {
+        if(safe_fail_trigger == FALSE) 
+        {   
+        show_dialog(llDetectedKey(0)); 
+        return;
+        }
+        else
+        {
+        llDialog(llDetectedKey(0),"\n"+error_message+"\n",["error :("], dialog_channel);
+        llSleep(.2);
+        return;
+        }
     }
-    listen(integer channel, string name, key id, string message)
+}
+listen(integer channel, string name, key id, string message)
+{
+if(safe_fail_trigger == FALSE) 
+{  
+    if(llGetOwnerKey(id)==owner){ if(message == "safe_fail")
     {
-    if (~llListFindList(users,[(string)id]))
-    {
-      if(message == "close")
+    error_message ="safe_fail_trigger";     
+    safe_fail_trigger = TRUE;
+    llSetTimerEvent(0);
+    llSetText("safe_fail_trigger",<1,0,0>,1);
+    }
+  }
+  if (~llListFindList(users,[(string)id]))
+  {
+      if(message == " "){ show_dialog(id); return; }
+      if(message == "close"){ return; }
+      if(message == "erase-temp")
       {
+      temp_whitelist = [];    
+      show_dialog(id); 
       return;
-      }
+      } 
       if(message == "[1] on/off")
       {
         if(ReturnObjectByAgentAbsence == "deactivate")
@@ -185,7 +247,6 @@ default
       } 
       if(message == "add-temp")
       {
-      random_channel();
       llTextBox(id, "Please insert a uuid to be added."+"\n"+"\n"+
       "please be aware this is only temporary.", dialog_channel);
       return;
@@ -194,27 +255,60 @@ default
       {
          if (!~llListFindList(temp_whitelist, [message]))
          {
-         llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" added"); temp_whitelist += message;    
-         llInstantMessage(message_owner,"secondlife:///app/agent/"+(string)id+"/about has added : " +
-         "secondlife:///app/agent/"+message+"/about on temp-list"); random_channel();
+         llRegionSayTo(id,0,"secondlife:///app/agent/"+message+"/about"+" added"); temp_whitelist += message;
          show_dialog(id);
          return;
          }
          else
-         { 
-         random_channel();
+         {
          llTextBox(id,"\n"+"\n"+"uuid already existed.", dialog_channel);
          }
       }
       else
       {
-      random_channel();
       llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
       }
     }
   }
-  timer()
-  {
-  Object_Moderation(); 
-  }
+}
+dataserver(key query_id, string data)
+{
+        if (query_id == notecardQueryId)
+        {
+            if (data == EOF)
+            {
+            llSetText("",<0,0,0>,0);  
+            memory_result =(string)llGetFreeMemory();    
+            llListen(rely_channel,"","","");
+            llSetTimerEvent(event_time); 
+            safe_fail_trigger = FALSE;
+            status_startup();
+            }
+            else
+            {
+                list params = llParseString2List(data, ["="], []);
+                if((key)llList2String(params, 0))
+                {
+                whitelist += llList2String(params, 0); ++notecardLine;
+                notecardQueryId = llGetNotecardLine(notecardName, notecardLine);
+                }
+                else
+                {
+                llSetTimerEvent(0);
+                safe_fail_trigger = TRUE;
+                error_message ="invalid_uuid_configuration";
+                llSetText("Invalid uuid list "+(string)(1+notecardLine)+" = "+llList2String(params, 0),<1,0,0>,1);
+                return;
+                }
+            }
+        }
+    } 
+    timer()
+    {
+    if(safe_fail_trigger == FALSE) 
+    {
+    memory_result =(string)llGetFreeMemory();
+    Object_Moderation();
+    }
+  }  
 }
