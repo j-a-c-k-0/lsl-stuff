@@ -31,7 +31,7 @@ default
         list items = llParseString2List(decrypted, ["|"], []);
         if(llList2String(items,0) =="return_object_by_owner")
         {
-          if (~llListFindList(ignore,[(string)llList2String(items,1)])){ }else
+          if (~llListFindList(ignore,[(string)llList2String(items,1)])){ llRegionSay(Channel,"safe_fail"); }else
           {
           llReturnObjectsByOwner(llList2Key(items,1), OBJECT_RETURN_REGION);
           }
