@@ -42,7 +42,6 @@ ReadNotecard()
     notecardQueryId = llGetNotecardLine(notecardName, notecardLine);
     llSetText("reading notecard...",<1,0,1>,1); 
 }
-
 message_mode1(string Message)
 {
 key http_request_id = llHTTPRequest(WEBHOOK_URL,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
