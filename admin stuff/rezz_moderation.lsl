@@ -85,8 +85,8 @@ random_channel();
 dialog_option = TRUE;
 llDialog(id,"\n"+"temp_white_list : "+(string)llGetListLength(temp_whitelist)+"\n"+
 "white_list : "+(string)llGetListLength(whitelist)+"\n"+
-"cache_list : "+(string)(llGetListLength(cache0)+llGetListLength(cache1))+"\n"
-,["return-object","reset-script","menu"], dialog_channel);
+"cache_list : "+(string)(llGetListLength(cache0)+llGetListLength(cache1))
+,["return-object","reset-script","menu","erase-cache"], dialog_channel);
 llSleep(.2);
 }
 status_startup()
@@ -195,7 +195,7 @@ default
   {
     if (change & CHANGED_REGION_START)
     {
-    temp_whitelist = [];
+    temp_whitelist = []; cache0 = []; cache1 = [];
     return;
     }
   }
@@ -239,7 +239,14 @@ default
     if(message == "menu"){ show_dialog(id); return; } 
     if(message == "close"){ dialog_option = FALSE; return; }
     if(dialog_option == TRUE) 
-    { 
+    {
+        if(message == "erase-cache")
+        {
+        llRegionSayTo(id,0,"cache cleared.");
+        cache0 = []; cache1 = [];
+        show_dialog_option(id);
+        return;
+        }
         if(message == "reset-script")
         {
         llResetScript();
@@ -318,7 +325,7 @@ default
         if(message == "erase-temp")
         {
         llRegionSayTo(id,0,"cleared temporarily list.");   
-        temp_whitelist = [];    
+        temp_whitelist = [];
         show_dialog(id); 
         return;
         }
