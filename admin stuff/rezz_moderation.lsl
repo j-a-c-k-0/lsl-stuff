@@ -1,14 +1,15 @@
 list users =[""];
 list temp_whitelist;
 list whitelist;
+list only_once;
 
 integer dialog_channel = 1;
 integer rely_channel = 2;
 string encryption_password = "12";
 key owner = "XXXX";
 
-integer rezzwarning = 1000;
-integer rezzlimit = 2000;
+integer rezzwarning = 800;
+integer rezzlimit = 1800;
 float banned_time_hour = 1.0;
 
 string WEBHOOK_URL = "XXXX";
@@ -68,38 +69,69 @@ string get_username(key id)
 vector agent = llGetAgentSize(id);
 if(agent){ return llKey2Name(id); }else{ return id;}
 }
+delete_data(list TempList)
+{
+  integer Lengthx = llGetListLength(only_once);
+  if (!Lengthx){return;}else
+  {
+    integer x;
+    for ( ; x < Lengthx; x += 1)
+    {  
+      list items = llParseString2List(llList2String(only_once,x), ["|"], []);
+      if (~llListFindList(TempList,[llList2Key(items,0)])){ }else
+      {
+      integer r = llListFindList(only_once,[llList2String(only_once,x)]);
+      only_once = llDeleteSubList(only_once,r,r);
+} } } }
+rezzcount_check (key id,integer value)
+{
+    integer Length = llGetListLength(only_once);     
+    if (!Length){return;}else
+    {
+        integer x;
+        for ( ; x < Length; x += 1)
+        {
+        list items = llParseString2List(llList2String(only_once,x), ["|"], []);
+        if(id == llList2String(items,0))
+        {
+        if(value == llList2Integer(items,1)){ }else
+        {
+        integer r = llListFindList(only_once,[llList2String(only_once,x)]); 
+        only_once = llDeleteSubList(only_once,r,r);     
+} } } } }
 rezz_limiter(key id,integer count,string crypt) 
 { 
-    if(count> rezzwarning && (integer)count< rezzlimit )
-    {
-    llRegionSay(rely_channel,crypt); 
-    llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzwarning); 
-    }
-    if((integer)count> rezzlimit)
-    {
-    llRegionSay(rely_channel,crypt);
-    llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
-    llTeleportAgentHome(id);
-    llAddToLandBanList(id,banned_time_hour);
-    if(webhook_message == FALSE) { return; }
-    if(message_mode == 1)
-    {
-    message_mode1(
-    "Name : "+get_username(id)+"\n"+
-    "Uuid : "+(string)id+"\n"+
-    "HighRezzCount : "+(string)count+"\n"+
-    "Posted : <t:"+(string)llGetUnixTime()+":R>");
-    }
-    if(message_mode == 2)
-    {
-    message_mode2(id,"HIGH REZZ_COUNT > "+(string)count,get_username(id),"Posted : <t:"+(string)llGetUnixTime()+":R>"); 
-    }
-  }
-}
+  rezzcount_check(id,count);
+  if (~llListFindList(only_once,[(string)id+"|"+(string)count])){ }else
+  {
+      only_once += (string)id+"|"+(string)count;
+      if(count> rezzwarning && (integer)count< rezzlimit )
+      {
+      llRegionSay(rely_channel,crypt); 
+      llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzwarning); 
+      }
+      if((integer)count> rezzlimit)
+      {
+      llRegionSay(rely_channel,crypt);
+      llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
+      llTeleportAgentHome(id);
+      llAddToLandBanList(id,banned_time_hour);
+      if(webhook_message == FALSE) { return; }
+      if(message_mode == 1)
+      {
+      message_mode1("Name : "+get_username(id)+"\n"+"Uuid : "+(string)id+"\n"+
+      "HighRezzCount : "+(string)count+"\n"+"Posted : <t:"+(string)llGetUnixTime()+":R>");
+      }
+      if(message_mode == 2)
+      {
+      message_mode2(id,"HIGH REZZ_COUNT > "+(string)count,get_username(id),"Posted : <t:"+(string)llGetUnixTime()+":R>"); 
+} } } }
 Object_Moderation() 
 {    
   list TempList = llGetParcelPrimOwners(llGetPos()); 
-  integer Length = llGetListLength(TempList); if (!Length){ return; }else
+  integer Length = llGetListLength(TempList); 
+  delete_data(TempList);
+  if (!Length){ return; }else
   {
     integer z; for ( ; z < Length; z += 2)
     {
@@ -118,16 +150,10 @@ Object_Moderation()
             if(ReturnObjectByAgentAbsence == "active")
             {
             llRegionSay(rely_channel,crypt);
-            }
-          }
-        }
-      }
-    }
-  }
-}
+} } } } } } }
 random_channel() 
 {
-dialog_channel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr); 
+dialog_channel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr);
 chanhandlr = llListen(dialog_channel, "", NULL_KEY, "");
 }
 show_dialog(key id)
@@ -143,7 +169,10 @@ show_dialog_option(key id)
 {
 random_channel();
 dialog_option = TRUE;
-llDialog(id,"option.",["return-object","reset-script","menu"], dialog_channel);
+llDialog(id,"\n"+"temp_white_list : "+(string)llGetListLength(temp_whitelist)+"\n"+
+"white_list : "+(string)llGetListLength(whitelist)+"\n"+
+"cache_list : "+(string)llGetListLength(only_once)+"\n"
+,["return-object","reset-script","menu"], dialog_channel);
 llSleep(.2);
 }
 status_startup()
@@ -175,16 +204,17 @@ default
   touch_start(integer num_detected)
   {
     if (~llListFindList(users,[(string)llDetectedKey(0)])){ if(safe_fail_trigger == FALSE) 
-    { 
+    {
     show_dialog(llDetectedKey(0)); return;
     }
     else
     {
-    llDialog(llDetectedKey(0),"\n"+error_message+"\n",["error :("], dialog_channel); llSleep(.2); return; }
+    random_channel(); llDialog(llDetectedKey(0),"\n"+error_message+"\n",["restart"], dialog_channel); llSleep(.2); return; }
     }
   }
   listen(integer channel, string name, key id, string message)
   {
+  if(safe_fail_trigger == TRUE) { if (~llListFindList(users,[(string)id])){ if(message == "restart"){ llResetScript(); } } }
   if(safe_fail_trigger == FALSE) 
   {
       if(llGetOwnerKey(id)==owner){ if(message == "safe_fail")
@@ -312,7 +342,7 @@ default
  {
    if (query_id == notecardQueryId){ if (data == EOF)
    {
-           llSetText("",<0,0,0>,0);  
+            llSetText("",<0,0,0>,0);  
             memory_result =(string)llGetFreeMemory();    
             llListen(rely_channel,"","","");
             llSetTimerEvent(event_time); 
@@ -337,7 +367,7 @@ default
                 }
             }
         }
-    } 
+    }
     timer()
     {
     if(safe_fail_trigger == FALSE) 
