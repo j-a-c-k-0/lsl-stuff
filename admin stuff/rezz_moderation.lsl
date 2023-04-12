@@ -21,7 +21,7 @@ key http_request_id = llHTTPRequest(WEBHOOK_URL,[HTTP_METHOD,"POST",HTTP_MIMETYP
 "application/json",HTTP_VERIFY_CERT, TRUE,HTTP_VERBOSE_THROTTLE,TRUE,
 HTTP_PRAGMA_NO_CACHE,TRUE],llList2Json(JSON_OBJECT,json));
 }
-rezz_limiter(key id,integer count,string name) 
+Message(key id,integer count,string name) 
 {
   if(webhook_message == FALSE) { return; }
   if(message_mode == 1)
@@ -49,7 +49,7 @@ default
     link_message(integer sender_num, integer num, string msg, key id)
     {
     list items = llParseString2List(msg, ["|"], []);
-    rezz_limiter(llList2Key(items,0),llList2Integer(items,1),llList2String(items,2));
+    Message(llList2Key(items,0),llList2Integer(items,1),llList2String(items,2));
     }
 }
 
