@@ -1,7 +1,8 @@
-list users =[""];
+list users = [""];
 list temp_whitelist;
 list whitelist;
-list only_once;
+list cache0;
+list cache1;
 
 integer dialog_channel = 1;
 integer rely_channel = 2;
@@ -9,7 +10,7 @@ string encryption_password = "12";
 key owner = "XXXX";
 
 integer rezzwarning = 800;
-integer rezzlimit = 1800;
+integer rezzlimit = 1500;
 float banned_time_hour = 1.0;
 
 string WEBHOOK_URL = "XXXX";
@@ -37,12 +38,13 @@ ReadNotecard()
     safe_fail_trigger = TRUE;
     error_message = "notecard_exception";     
     llSetText("Notecard '" + notecardName + "' missing or unwritten.",<1,0,0>,1);
+    llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"0"]);
     return;
     }
     else if (llGetInventoryKey(notecardName) == notecardKey) return;
     notecardKey = llGetInventoryKey(notecardName);
     notecardQueryId = llGetNotecardLine(notecardName, notecardLine);
-    llSetText("reading notecard...",<1,0,1>,1); 
+    llSetText("reading notecard...",<1,0,1>,1);
 }
 message_mode1(string Message)
 {
@@ -59,98 +61,10 @@ llList2Json(JSON_OBJECT,["color","16711680","title",name,
 "description",description,"url","https://world.secondlife.com/resident/" + (string)AvatarID,
 "author",llList2Json(JSON_OBJECT,["name",Message,"",""]),
 "footer",llList2Json(JSON_OBJECT,["",""])])]),"",""];
-
 key http_request_id = llHTTPRequest(WEBHOOK_URL,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
 "application/json",HTTP_VERIFY_CERT, TRUE,HTTP_VERBOSE_THROTTLE,TRUE,
 HTTP_PRAGMA_NO_CACHE,TRUE],llList2Json(JSON_OBJECT,json));
 }
-string get_username(key id)
-{
-vector agent = llGetAgentSize(id);
-if(agent){ return llKey2Name(id); }else{ return id;}
-}
-delete_data(list TempList)
-{
-  integer Lengthx = llGetListLength(only_once);
-  if (!Lengthx){return;}else
-  {
-    integer x;
-    for ( ; x < Lengthx; x += 1)
-    {  
-      list items = llParseString2List(llList2String(only_once,x), ["|"], []);
-      if (~llListFindList(TempList,[llList2Key(items,0)])){ }else
-      {
-      integer r = llListFindList(only_once,[llList2String(only_once,x)]);
-      only_once = llDeleteSubList(only_once,r,r);
-} } } }
-rezzcount_check (key id,integer value)
-{
-    integer Length = llGetListLength(only_once);     
-    if (!Length){return;}else
-    {
-        integer x;
-        for ( ; x < Length; x += 1)
-        {
-        list items = llParseString2List(llList2String(only_once,x), ["|"], []);
-        if(id == llList2String(items,0))
-        {
-        if(value == llList2Integer(items,1)){ }else
-        {
-        integer r = llListFindList(only_once,[llList2String(only_once,x)]); 
-        only_once = llDeleteSubList(only_once,r,r);     
-} } } } }
-rezz_limiter(key id,integer count,string crypt) 
-{ 
-  rezzcount_check(id,count);
-  if (~llListFindList(only_once,[(string)id+"|"+(string)count])){ }else
-  {
-      only_once += (string)id+"|"+(string)count;
-      if(count> rezzwarning && (integer)count< rezzlimit )
-      {
-      llRegionSay(rely_channel,crypt); 
-      llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzwarning); 
-      }
-      if((integer)count> rezzlimit)
-      {
-      llRegionSay(rely_channel,crypt);
-      llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
-      llTeleportAgentHome(id);
-      llAddToLandBanList(id,banned_time_hour);
-      if(webhook_message == FALSE) { return; }
-      if(message_mode == 1)
-      {
-      message_mode1("Name : "+get_username(id)+"\n"+"Uuid : "+(string)id+"\n"+
-      "HighRezzCount : "+(string)count+"\n"+"Posted : <t:"+(string)llGetUnixTime()+":R>");
-      }
-      if(message_mode == 2)
-      {
-      message_mode2(id,"HIGH REZZ_COUNT > "+(string)count,get_username(id),"Posted : <t:"+(string)llGetUnixTime()+":R>"); 
-} } } }
-Object_Moderation() 
-{    
-  list TempList = llGetParcelPrimOwners(llGetPos()); 
-  integer Length = llGetListLength(TempList); 
-  delete_data(TempList);
-  if (!Length){ return; }else
-  {
-    integer z; for ( ; z < Length; z += 2)
-    {
-      if (~llListFindList(whitelist,[llList2String(TempList, z)])){ }else
-      {       
-        if (~llListFindList(temp_whitelist,[llList2String(TempList, z)])){ }else
-        {
-          string crypt = llXorBase64(llStringToBase64("return_object_by_owner"+"|"+llList2String(TempList, z)),llStringToBase64(encryption_password)); 
-          if(ReturnObjectByRezzCount == "active")
-          {
-          rezz_limiter(llList2Key(TempList,z),llList2Integer(TempList,z+1),crypt);
-          }          
-          vector agent = llGetAgentSize(llList2String(TempList,z));
-          if(agent){ }else
-          {
-            if(ReturnObjectByAgentAbsence == "active")
-            {
-            llRegionSay(rely_channel,crypt);
-} } } } } } }
 random_channel() 
 {
 dialog_channel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr);
@@ -171,7 +85,7 @@ random_channel();
 dialog_option = TRUE;
 llDialog(id,"\n"+"temp_white_list : "+(string)llGetListLength(temp_whitelist)+"\n"+
 "white_list : "+(string)llGetListLength(whitelist)+"\n"+
-"cache_list : "+(string)llGetListLength(only_once)+"\n"
+"cache_list : "+(string)(llGetListLength(cache0)+llGetListLength(cache1))+"\n"
 ,["return-object","reset-script","menu"], dialog_channel);
 llSleep(.2);
 }
@@ -182,6 +96,99 @@ if("1"== llList2String(target0,0)){ ReturnObjectByAgentAbsence = "active"; }else
 list target1 =llGetLinkPrimitiveParams(3,[PRIM_DESC]);
 if("1"== llList2String(target1,0)) { ReturnObjectByRezzCount = "active"; }else{ ReturnObjectByRezzCount = "deactivate"; }
 }
+string get_username(key id)
+{
+vector agent = llGetAgentSize(id);
+if(agent){ return llKey2Name(id); }else{ return id;}
+}
+delete_data0(list TempList)
+{
+  integer Lengthx = llGetListLength(cache0);
+  if (!Lengthx){return;}else{ integer x; for ( ; x < Lengthx; x += 1)
+  {  
+   list items = llParseString2List(llList2String(cache0,x),["|"],[]); if (~llListFindList(TempList,[llList2Key(items,0)])){ }else
+   {
+   integer r = llListFindList(cache0,[llList2String(cache0,x)]);
+   cache0 = llDeleteSubList(cache0,r,r);
+}}}}
+delete_data1(list TempList)
+{
+   integer Lengthx = llGetListLength(cache1);
+   if (!Lengthx){return;}else{ integer x; for ( ; x < Lengthx; x += 1){ if (~llListFindList(TempList,[llList2Key(cache1,x)])){ }else
+   {
+   integer r = llListFindList(cache1,[llList2String(cache1,x)]);
+   cache1 = llDeleteSubList(cache1,r,r);
+}}}}
+rezzcount_check (key id,integer value)
+{
+    integer Length = llGetListLength(cache0);     
+    if (!Length){return;}else
+    {
+        integer x;
+        for ( ; x < Length; x += 1)
+        {
+        list items = llParseString2List(llList2String(cache0,x), ["|"], []);
+        if(id == llList2String(items,0))
+        {
+        if(value == llList2Integer(items,1)){ }else
+        {
+        integer r = llListFindList(cache0,[llList2String(cache0,x)]); 
+        cache0 = llDeleteSubList(cache0,r,r);     
+} } } } }
+rezz_limiter(key id,integer count,string crypt) 
+{ 
+    if(count> rezzwarning && (integer)count< rezzlimit )
+    {
+    llRegionSay(rely_channel,crypt); 
+    llInstantMessage(id,"Warning Don't go rezz over "+(string)rezzwarning); 
+    }
+    if((integer)count> rezzlimit)
+    {
+    llRegionSay(rely_channel,crypt);
+    llInstantMessage(id,"You had been banned for "+(string)((integer)banned_time_hour)+" hour Reason [ Rezzcount > "+(string)count+" ]");
+    llTeleportAgentHome(id);
+    llAddToLandBanList(id,banned_time_hour);
+    if(webhook_message == FALSE) { return; }
+    if(message_mode == 1)
+    {
+    message_mode1("Name : "+get_username(id)+"\n"+"Uuid : "+(string)id+"\n"+
+    "HighRezzCount : "+(string)count+"\n"+"Posted : <t:"+(string)llGetUnixTime()+":R>");
+    }
+    if(message_mode == 2)
+    {
+    message_mode2(id,"HIGH REZZ_COUNT > "+(string)count,get_username(id),"Posted : <t:"+(string)llGetUnixTime()+":R>"); 
+} } }
+Object_Moderation() 
+{    
+  list TempList = llGetParcelPrimOwners(llGetPos());
+  integer Length = llGetListLength(TempList);
+  delete_data0(TempList); delete_data1(TempList);
+  if (!Length){return;}else{ integer z; for ( ; z < Length; z += 2)
+  {
+      if (~llListFindList(whitelist,[llList2String(TempList, z)])){ }else
+      {
+        if (~llListFindList(temp_whitelist,[llList2String(TempList, z)])){ }else
+        {
+          string crypt = llXorBase64(llStringToBase64("return_object_by_owner"+"|"+llList2String(TempList, z)),llStringToBase64(encryption_password)); 
+          if(ReturnObjectByRezzCount == "active")
+          {
+             rezzcount_check(llList2Key(TempList,z),llList2Integer(TempList,z+1));
+             if (~llListFindList(cache0,[llList2String(TempList,z)+"|"+llList2String(TempList,z+1)])){ }else
+             {
+             cache0 += llList2String(TempList,z)+"|"+llList2String(TempList,z+1);
+             rezz_limiter(llList2Key(TempList,z),llList2Integer(TempList,z+1),crypt);
+             }
+          }
+          vector agent = llGetAgentSize(llList2String(TempList,z));
+          if(agent){ }else
+          {
+            if(ReturnObjectByAgentAbsence == "active")
+            {
+              if (~llListFindList(cache1,[llList2String(TempList, z)])){ }else
+              {
+              cache1 += llList2String(TempList,z);
+              llRegionSay(rely_channel,crypt);
+} } } } } } } }
 default
 {
   changed(integer change)
@@ -223,6 +230,7 @@ default
       safe_fail_trigger = TRUE;
       error_message ="safe_fail_trigger";
       llSetText("safe_fail_trigger",<1,0,0>,1);
+      llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"0"]);
       return;
       }
   }
@@ -262,7 +270,7 @@ default
           {
           llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
           return;
-          } 
+          }
       }
       if(dialog_option == FALSE) 
       {
@@ -280,7 +288,7 @@ default
           }
           else
           {
-          llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); 
+          llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]);
           ReturnObjectByAgentAbsence = "deactivate";
           }
           show_dialog(id); 
@@ -333,11 +341,7 @@ default
          {
          llTextBox(id,"\n"+"\n"+"invalid uuid.", dialog_channel);
          return;
-         }
-       }
-     }
-   }
- }
+ } } } } }
  dataserver(key query_id, string data)
  {
    if (query_id == notecardQueryId){ if (data == EOF)
@@ -363,17 +367,13 @@ default
                 safe_fail_trigger = TRUE;
                 error_message ="invalid_uuid_configuration";
                 llSetText("Invalid uuid list "+(string)(1+notecardLine)+" = "+llList2String(params, 0),<1,0,0>,1);
+                llSetLinkPrimitiveParamsFast(2,[PRIM_DESC,"0"]); llSetLinkPrimitiveParamsFast(3,[PRIM_DESC,"0"]);
                 return;
-                }
-            }
-        }
-    }
+    }   }   }   }
     timer()
-    {
+    {   
     if(safe_fail_trigger == FALSE) 
     {
     memory_result =(string)llGetFreeMemory();
     Object_Moderation();
-    }
-  }  
-}
+} } }
