@@ -1,3 +1,5 @@
+//by IIIegaimexican
+
 vector  Offset = <0,0,0>;
 vector Pos;
 rotation Rot;
