@@ -32,10 +32,7 @@ default
 {
     changed(integer change)
     {
-       if (change & CHANGED_REGION_START)         
-       {
-       llResetScript();
-       }
+    if (change & CHANGED_REGION_START){send_message1("Region_Restart : "+llGetDate()+"\n"+"Posted : <t:"+(string)llGetUnixTime()+":R>"); llResetScript();}
     }
     on_rez(integer start_param) 
     {
@@ -44,20 +41,17 @@ default
     state_entry()
     {
     llSetObjectDesc("mode_"+(string)message_mode);
-    string region = llGetRegionName();
-    llSetObjectName("["+region+"]");
+    llSetObjectName("["+llGetRegionName()+"]");
     }
     link_message(integer sender_num, integer num, string msg, key id)
     {
-     list target =llGetLinkPrimitiveParams(LINK_THIS,[PRIM_DESC]);
-     if(llList2String(target,0) == "mode_1")
-     {
-     send_message1(msg);
-     } 
-     if(llList2String(target,0) == "mode_2")
-     {    
-     list items = llParseString2List(msg, ["|"], []);
-     send_message2(llList2Key(items,0),llList2String(items,1),llList2String(items,2),llList2String(items,3),llList2String(items,4)); 
-     }
-   }
- }
+    list target =llGetLinkPrimitiveParams(LINK_THIS,[PRIM_DESC]);
+    if(llList2String(target,0) == "mode_1")
+    {
+    send_message1(msg);
+    } 
+    if(llList2String(target,0) == "mode_2")
+    {    
+    list items = llParseString2List(msg, ["|"], []);
+    send_message2(llList2Key(items,0),llList2String(items,1),llList2String(items,2),llList2String(items,3),llList2String(items,4)); 
+} } }
