@@ -58,8 +58,8 @@ agententer()
             }
             data += llList2String(List,x)+"|"+llDeleteSubString(llList2String(details,0),30,1000000)+"|"+(string)llGetUnixTime()+"|"+position;
 }   }   }   }
-agentleft() 
-{    
+agentleft()
+{
     integer Length= llGetListLength(data);
     if (!Length){return;}else{integer x;for ( ; x < Length; x += 1)
     {
@@ -95,11 +95,13 @@ agentleft()
             "Posted : <t:"+(string)llGetUnixTime()+":R>"+"|"+
             agent(llList2String(items,0)),"");
             }
-            data = llDeleteSubList(data,x,x);
+            integer r = llListFindList(data,[llList2String(data,x)]);
+            data = llDeleteSubList(data,r,r);
          }  }
          else
          {
-         data = llDeleteSubList(data,x,x);
+         integer r = llListFindList(data,[llList2String(data,x)]);
+         data = llDeleteSubList(data,r,r);
 }  }  }  }
 default
 {
