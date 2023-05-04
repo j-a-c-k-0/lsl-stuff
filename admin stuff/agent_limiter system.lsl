@@ -3,11 +3,11 @@ list only_once0;
 list whitelist =[];
 integer flag = AGENT_LIST_REGION;
 integer streaminglimit = 3500;
-integer streamingwarning = 3000;
+integer streamingwarning = 2500;
 integer scriptlimit = 500;
 integer scriptwarning = 400;
 integer event_timer = 3;
-integer relay = 678445;
+integer relay = 35688;
 
 message(string message)
 {
@@ -23,16 +23,11 @@ integer Length = llGetListLength(only_once1);
 if (!Length){ return; }else{integer x;for ( ; x < Length; x += 1)
 {
    list items = llParseString2List(llList2String(only_once1,x), ["|"], []);
-   if((key)llList2String(items,0))
+   vector agent = llGetAgentSize(llList2String(items,0));
+   if(agent){ }else
    {
-     vector agent = llGetAgentSize(llList2String(items,0));
-     if(agent){ }else
-     {
-     only_once1 = llDeleteSubList(only_once1,x,x);
-   } }
-   else
-   {
-   only_once1 = llDeleteSubList(only_once1,x,x);     
+   integer r = llListFindList(only_once1,[llList2String(only_once1,x)]);
+   only_once1 = llDeleteSubList(only_once1,r,r);
 }}}}
 graphics_check(key id,integer value)
 {
@@ -44,7 +39,8 @@ graphics_check(key id,integer value)
         {
         if(value == llList2Integer(items,1)){ }else
         {
-        only_once1 = llDeleteSubList(only_once1,x,x);
+        integer r = llListFindList(only_once1,[llList2String(only_once1,x)]);
+        only_once1 = llDeleteSubList(only_once1,r,r);
 } } } } }
 graphics() 
 {    
@@ -62,12 +58,12 @@ graphics()
              if(llList2Integer(details,0) > streamingwarning && llList2Integer(details,0) < streaminglimit)
              {
              only_once1 += llList2String(TempList, x)+"|"+llList2String(details,0);
-             llInstantMessage(llList2String(TempList,x),"Warning! [ HIGH STREAMING_COST > "+(string)streaminglimit+" ]");
+             llInstantMessage(llList2String(TempList,x),"Warning! [ HIGH STREAMING_COST > "+(string)llList2Integer(details,0)+" ]");
              }
              if(llList2Integer(details,0)> streaminglimit)
              {
+             only_once1 += llList2String(TempList, x)+"|"+llList2String(details,0); 
              string username = llDeleteSubString(llList2String(details,2),30,1000000);   
-             only_once1 += llList2String(TempList, x)+"|"+llList2String(details,0);
              message("secondlife:///app/agent/"+llList2String(TempList, x)+"/about"+" [ HIGH STREAMING_COST > "+(string)llList2Integer(details,0)+" ]");
 
              llMessageLinked(3, 0,"[ Name "+username+" ]"+
@@ -97,18 +93,12 @@ script_agentleft()
 integer Length = llGetListLength(only_once0);     
 if (!Length){ return; }else{integer x;for ( ; x < Length; x += 1)
 {
-   list items = llParseString2List(llList2String(only_once1,x), ["|"], []);
-   if((key)llList2String(items,0))
+   list items = llParseString2List(llList2String(only_once0,x), ["|"], []);
+   vector agent = llGetAgentSize(llList2String(items,0));
+   if(agent){ }else
    {
-     list items = llParseString2List(llList2String(only_once0,x), ["|"], []);
-     vector agent = llGetAgentSize(llList2String(items,0));
-     if(agent){ }else
-     {
-     only_once0 = llDeleteSubList(only_once0,x,x);
-   } }
-   else
-   {
-   only_once0 = llDeleteSubList(only_once0,x,x);
+   integer r = llListFindList(only_once0,[llList2String(only_once0,x)]);
+   only_once0 = llDeleteSubList(only_once0,r,r);
 }}}}
 script_check(key id,integer value)
 {
@@ -120,7 +110,8 @@ script_check(key id,integer value)
         {
         if(value == llList2Integer(items,1)){ }else
         {
-        only_once0 = llDeleteSubList(only_once0,x,x);
+        integer r = llListFindList(only_once0,[llList2String(only_once0,x)]);
+        only_once0 = llDeleteSubList(only_once0,r,r);
 } } } } }
 script() 
 {       
@@ -138,12 +129,12 @@ script()
              if(llList2Integer(details,1) > scriptwarning && llList2Integer(details,1) < scriptlimit)
              {
              only_once0 += llList2String(TempList, x)+"|"+llList2String(details,1);
-             llInstantMessage(llList2String(TempList,x),"Warning! [ HIGH SCRIPT_COUNT > "+(string)streaminglimit+" ]");
+             llInstantMessage(llList2String(TempList,x),"Warning! [ HIGH SCRIPT_COUNT > "+(string)llList2Integer(details,1)+" ]");
              }
              if(llList2Integer(details,1)> scriptlimit)
              {
-             string username = llDeleteSubString(llList2String(details,2),30,1000000); 
              only_once0 += llList2String(TempList, x)+"|"+llList2String(details,1);
+             string username = llDeleteSubString(llList2String(details,2),30,1000000); 
              message("secondlife:///app/agent/"+llList2String(TempList, x)+"/about"+" [ HIGH SCRIPT_COUNT > "+(string)llList2Integer(details,1)+" ]");
 
              llMessageLinked(3, 0,"[ Name "+username+" ]"+"[ Uuid "+llList2String(TempList,x)+" ]"+
