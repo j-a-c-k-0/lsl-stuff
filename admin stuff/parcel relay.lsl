@@ -1,7 +1,4 @@
-list ignore 
-=[
-"XXXX"//jack
-];
+list ignore =[];
 key owner = "XXXX";
 integer Channel = 678445;
 default
