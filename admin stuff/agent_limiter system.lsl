@@ -7,7 +7,7 @@ integer streamingwarning = 3000;
 integer scriptlimit = 500;
 integer scriptwarning = 400;
 integer event_timer = 3;
-integer relay = 1;
+integer relay = 678445;
 
 message(string message)
 {
