@@ -139,6 +139,7 @@ script()
 
              llMessageLinked(3, 0,"[ Name "+username+" ]"+"[ Uuid "+llList2String(TempList,x)+" ]"+
              "[ HIGH SCRIPT_COUNT > "+(string)llList2Integer(details,1)+" ]","");
+
              llRegionSay(relay,"kick|"+llList2String(TempList, x));
              
              list target =llGetLinkPrimitiveParams(2,[PRIM_DESC]);
