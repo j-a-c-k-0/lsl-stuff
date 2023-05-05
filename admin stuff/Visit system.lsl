@@ -97,12 +97,7 @@ agentleft()
             }
             integer r = llListFindList(data,[llList2String(data,x)]);
             data = llDeleteSubList(data,r,r);
-         }  }
-         else
-         {
-         integer r = llListFindList(data,[llList2String(data,x)]);
-         data = llDeleteSubList(data,r,r);
-}  }  }  }
+}  }  }  }  }
 default
 {
     changed(integer change)
