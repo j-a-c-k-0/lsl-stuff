@@ -40,7 +40,7 @@ string p_zone(string position,key ID)
     {
     return llList2String(items,2);
 } } } return position_A+" | "+A_status(ID); }
-string lookforagent() 
+string region_avatar_list() 
 {
    list List = llGetAgentList(AGENT_LIST_REGION,[]);
    integer Length = llGetListLength(List);
@@ -54,11 +54,11 @@ string lookforagent()
          if (count > 20) 
          {
          detect_list += (list)"..."+"\n";
-         return (string)detect_list;
+         return "Agents : "+(string)Length+"\n"+(string)detect_list;
          }else{
          list details = llGetObjectDetails(llList2Key(List, x), ([OBJECT_NAME,OBJECT_POS]));
          detect_list += (list)llDeleteSubString(llList2String(details,0),25,1000000)+" ( "+p_zone((string)llList2Vector(details,1),llList2Key(List, x))+" )"+"\n";
-} } }return (string)detect_list; }
+} } }return "Agents : "+(string)Length+"\n"+(string)detect_list; }
 send_message2(key AvatarID,string Message,string name,string description,string cho_color) 
 {
 llSleep(.5);
@@ -66,7 +66,7 @@ list json =[
 "username",llGetRegionName()+"","embeds",llList2Json(JSON_ARRAY,[llList2Json(JSON_OBJECT,["color",color(cho_color),"title",name,
 "description",description,"url","https://world.secondlife.com/resident/" + (string)AvatarID,
 "author",llList2Json(JSON_OBJECT,["name",Message,"",""]),
-"footer",llList2Json(JSON_OBJECT,["","","text","Agents : "+(string)llGetRegionAgentCount()+"\n"+lookforagent()])])]),"",""];
+"footer",llList2Json(JSON_OBJECT,["","","text",region_avatar_list()])])]),"",""];
 
 llHTTPRequest(webhook_url,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
 "application/json",HTTP_VERIFY_CERT, TRUE,HTTP_VERBOSE_THROTTLE,TRUE,
