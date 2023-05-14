@@ -1,27 +1,27 @@
-string webhook_url = "";
 integer message_mode = 2; //1,2
+string webhook_url = "";
 list privacy_zone =[]; //"vector=radius=title"
 
 string color(string A)
 {
-if(A == "known_agent")return"100000";
 if(A == "unknown_agent")return"16744448";
+if(A == "known_agent")return"100000";
 if(A == "alert")return"16711680";
 return"16777215";
 }
 string A_status(key avatar)
 { 
-if(llGetAgentInfo(avatar) & AGENT_ON_OBJECT)  return "sitting on object";
-if(llGetAgentInfo(avatar) & AGENT_AWAY)  return "afk";
-if(llGetAgentInfo(avatar) & AGENT_BUSY)  return "busy";
-if(llGetAgentInfo(avatar) & AGENT_CROUCHING)  return "crouching";
-if(llGetAgentInfo(avatar) & AGENT_FLYING)  return "flying";
-if(llGetAgentInfo(avatar) & AGENT_IN_AIR)  return "in air";
-if(llGetAgentInfo(avatar) & AGENT_MOUSELOOK)  return "mouse look";
-if(llGetAgentInfo(avatar) & AGENT_SITTING)  return "sitting";
-if(llGetAgentInfo(avatar) & AGENT_TYPING)  return "typing";
-if(llGetAgentInfo(avatar) & AGENT_WALKING)  return "walking";     
-if(llGetAgentInfo(avatar) & AGENT_ALWAYS_RUN)  return "running";
+if(llGetAgentInfo(avatar) & AGENT_ON_OBJECT) return "sitting on object";
+if(llGetAgentInfo(avatar) & AGENT_AWAY) return "afk";
+if(llGetAgentInfo(avatar) & AGENT_BUSY) return "busy";
+if(llGetAgentInfo(avatar) & AGENT_CROUCHING) return "crouching";
+if(llGetAgentInfo(avatar) & AGENT_FLYING) return "flying";
+if(llGetAgentInfo(avatar) & AGENT_IN_AIR) return "in air";
+if(llGetAgentInfo(avatar) & AGENT_MOUSELOOK) return "mouse look";
+if(llGetAgentInfo(avatar) & AGENT_SITTING) return "sitting";
+if(llGetAgentInfo(avatar) & AGENT_TYPING) return "typing";
+if(llGetAgentInfo(avatar) & AGENT_WALKING) return "walking";     
+if(llGetAgentInfo(avatar) & AGENT_ALWAYS_RUN) return "running";
 return "standing";
 }
 string p_zone(string position,key ID)
@@ -31,21 +31,21 @@ string p_zone(string position,key ID)
   integer Length = llGetListLength(privacy_zone);     
   if (!Length){ return position_A+" | "+A_status(ID); }else
   {
-  integer x; 
+  integer x;
   for ( ; x < Length; x += 1)
   {
     list items = llParseString2List(llList2String(privacy_zone, x),["="],[]);
     float dist = llVecDist((vector)position,(vector)llList2String(items,0));
     if(dist>llList2Integer(items,1)){ }else
-    {      
+    {
     return llList2String(items,2);
 } } } return position_A+" | "+A_status(ID); }
 string lookforagent() 
 {
    list List = llGetAgentList(AGENT_LIST_REGION,[]);
    integer Length = llGetListLength(List);
-   list detect_list = [];     
-   if (!Length){return"no one detected";}else
+   list detect_list = [];
+   if (!Length){ return "no one detected"; }else
    {
       integer x;
       for ( ; x < Length; x += 1)
@@ -61,20 +61,21 @@ string lookforagent()
 } } }return (string)detect_list; }
 send_message2(key AvatarID,string Message,string name,string description,string cho_color) 
 {
-list json =[ 
-"username",llGetRegionName()+"","embeds", llList2Json(JSON_ARRAY,[
-llList2Json(JSON_OBJECT,["color",color(cho_color),"title",name,
+llSleep(.5);
+list json =[
+"username",llGetRegionName()+"","embeds",llList2Json(JSON_ARRAY,[llList2Json(JSON_OBJECT,["color",color(cho_color),"title",name,
 "description",description,"url","https://world.secondlife.com/resident/" + (string)AvatarID,
 "author",llList2Json(JSON_OBJECT,["name",Message,"",""]),
-"footer", llList2Json(JSON_OBJECT,["","","text","Agents : "+(string)llGetRegionAgentCount()+"\n"+lookforagent()])])]),"",""];
+"footer",llList2Json(JSON_OBJECT,["","","text","Agents : "+(string)llGetRegionAgentCount()+"\n"+lookforagent()])])]),"",""];
 
-key http_request_id = llHTTPRequest(webhook_url,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
+llHTTPRequest(webhook_url,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
 "application/json",HTTP_VERIFY_CERT, TRUE,HTTP_VERBOSE_THROTTLE,TRUE,
 HTTP_PRAGMA_NO_CACHE,TRUE],llList2Json(JSON_OBJECT,json));
 }
 send_message1(string Message)
 {
-key http_request_id = llHTTPRequest(webhook_url,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
+llSleep(.5);
+llHTTPRequest(webhook_url,[HTTP_METHOD,"POST",HTTP_MIMETYPE,
 "application/json",HTTP_VERIFY_CERT, TRUE,HTTP_VERBOSE_THROTTLE,TRUE,
 HTTP_PRAGMA_NO_CACHE,TRUE],llList2Json(JSON_OBJECT,
 ["username",llGetRegionName()+"","content",Message]));
