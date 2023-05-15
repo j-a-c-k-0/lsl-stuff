@@ -1,6 +1,7 @@
-integer message_mode = 2; //1,2
+integer footer_agent_display = 9;//limit 30
+integer message_mode = 2;//1,2
 string webhook_url = "";
-list privacy_zone =[]; //"vector=radius=title"
+list privacy_zone =[];//"vector=radius=title"
 
 string color(string A)
 {
@@ -51,13 +52,13 @@ string region_avatar_list()
       for ( ; x < Length; x += 1)
       {
          integer count = llGetListLength(detect_list);
-         if (count > 20) 
+         if (count > footer_agent_display) 
          {
-         detect_list += (list)"..."+"\n";
+         detect_list += "..."+"\n";
          return "Agent : "+(string)Length+"\n"+(string)detect_list;
          }else{
          list details = llGetObjectDetails(llList2Key(List, x), ([OBJECT_NAME,OBJECT_POS]));
-         detect_list += (list)llDeleteSubString(llList2String(details,0),25,1000000)+" ( "+p_zone((string)llList2Vector(details,1),llList2Key(List, x))+" )"+"\n";
+         detect_list += llDeleteSubString(llList2String(details,0),25,1000000)+" ( "+p_zone((string)llList2Vector(details,1),llList2Key(List, x))+" )"+"\n";
 } } }return "Agent : "+(string)Length+"\n"+(string)detect_list; }
 send_message2(key AvatarID,string Message,string name,string description,string cho_color) 
 {
