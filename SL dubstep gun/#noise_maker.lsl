@@ -1,3 +1,4 @@
+check_valid_uuid(string A){if((key)A){ llLoopSound(A,(float)llGetObjectDesc()); }else{ llStopSound(); }}
 default
 {
     on_rez(integer start_param) 
@@ -22,7 +23,7 @@ default
     }
     if(llList2String(items,0) == "play")
     { 
-    llLoopSound(llList2String(items,1),(float)llGetObjectDesc());
+    check_valid_uuid(llList2String(items,1));
     }
-  }   
+  }
 }
