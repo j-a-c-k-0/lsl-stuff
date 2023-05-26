@@ -23,10 +23,10 @@ float runtime = 0.1;
 float gun_shooting;
 float glow = 0.2;
 
-string animation_aim = "[Aim]";
-string animation_hold = "[Hold]";
 string shutdown_sound = "82822418-cce5-8bc6-a1cb-7449b40b005e";
 string after_sound = "ba948a2d-84e3-f033-65f6-268512e6a0b1";
+string animation_hold = "[Hold]";
+string animation_aim = "[Aim]";
 string shoot_sound;
 string idle_music;
 string start_fire;
@@ -43,10 +43,10 @@ return FALSE;
 }
 findlink() 
 {
-starget = getLinkNum("starget");
 animated0 = getLinkNum("gif1");
 animated1 = getLinkNum("gif2");  
 gun = getLinkNum("DubStepGun");
+starget = getLinkNum("starget");
 meter = getLinkNum("meter");
 vinyl = getLinkNum("vinyl");
 turn1 = getLinkNum("turn1");
@@ -213,11 +213,11 @@ default
     }
         llSetLinkPrimitiveParamsFast(particle1,[PRIM_DESC,""]);
         if(msg == "[ Pause ]")
-        { 
+        {
           gun_shooting =0; gun_power = FALSE;
-          list target =llGetLinkPrimitiveParams(speaker,[PRIM_DESC]);
-          llPlaySound(shutdown_sound,(float)llList2String(target,0));
           llMessageLinked(speaker,0,"stop","");
+          list target =llGetLinkPrimitiveParams(speaker,[PRIM_DESC]);
+          llMessageLinked(speaker,0,"shutdown_sound|"+shutdown_sound,""); 
           if(long_clip_switch == TRUE){llMessageLinked(LINK_THIS,0,"long_sound_pause",""); shutdown(); return;}
           shutdown();
           }
