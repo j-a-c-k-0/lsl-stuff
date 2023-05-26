@@ -137,7 +137,7 @@ default
        llSetLinkPrimitiveParamsFast(animated0,[PRIM_DESC,""]);
        string Random = llList2String(songlist,llFloor(llFrand(llGetListLength(songlist)))); music_selection = Random;
        llSetLinkPrimitiveParamsFast(particle2,[PRIM_DESC,checklist(music_selection)+"="+(string)llGetFreeMemory()]);
-       llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+Random,"");
+       llMessageLinked(LINK_THIS,0,"erase_data","");llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+Random,"");
        llMessageLinked(LINK_THIS, 0,"mainmenu_request","");
        }
     }
