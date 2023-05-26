@@ -153,7 +153,7 @@ default
           {
           llSetLinkPrimitiveParamsFast(speaker,[PRIM_DESC,(string)llList2Float(items0,1)]);
           llMessageLinked(LINK_THIS,0,"mainmenu_request","");
-          llMessageLinked(LINK_THIS,0,"volume_change","");
+          llMessageLinked(speaker,0,"volume_change|"+(string)llList2Float(items0,1),"");
           }
           if(text == "[ main ]"){llMessageLinked(LINK_THIS, 0,"mainmenu_request","");}
           if(text == ">>>") dialog_songmenu(cur_page+1);
@@ -161,7 +161,7 @@ default
           if(llToLower(llGetSubString(text,0,5)) == "play #")
           {
           integer pnum = (integer)llGetSubString(text, 6, -1); music_selection = llList2String(songlist,pnum);
-          llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+llList2String(songlist,pnum),"");
+          llMessageLinked(LINK_THIS,0,"erase_data","");llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+llList2String(songlist,pnum),"");
           llSetLinkPrimitiveParamsFast(particle2,[PRIM_DESC,checklist(music_selection)+"="+(string)llGetFreeMemory()]);
           dialog_songmenu(cur_page);
           }
