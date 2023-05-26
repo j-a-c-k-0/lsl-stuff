@@ -17,6 +17,7 @@ default
   link_message(integer source, integer num, string str, key id)
   {
   list items = llParseString2List(str, ["|"], []); 
+  if(llList2String(items,0) == "shutdown_sound"){llPlaySound(llList2String(items,1),(float)llGetObjectDesc());}
   if(llList2String(items,0) == "volume_change"){llAdjustSoundVolume(llList2Float(items,1));}
   if(llList2String(items,0) == "play"){check_valid_uuid(llList2String(items,1));}
   if(str == "stop"){llStopSound();}
