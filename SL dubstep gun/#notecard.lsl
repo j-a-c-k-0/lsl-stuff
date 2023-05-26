@@ -61,6 +61,5 @@ default
           if (strData == EOF){llSetLinkPrimitiveParamsFast(animated0,[PRIM_DESC,""]); llMessageLinked(LINK_THIS,0,"music_changed","");}else
           {
              keyConfigQueryhandle = llGetNotecardLine(note_name, ++intLine1);
-             list params = llParseString2List(strData, ["="], []);
              llMessageLinked(LINK_THIS,0,"upload_note|" + strData,"");
     }  }  }  }
