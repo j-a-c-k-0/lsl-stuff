@@ -215,9 +215,7 @@ default
         if(msg == "[ Pause ]")
         {
           gun_shooting =0; gun_power = FALSE;
-          llMessageLinked(speaker,0,"stop","");
-          list target =llGetLinkPrimitiveParams(speaker,[PRIM_DESC]);
-          llMessageLinked(speaker,0,"shutdown_sound|"+shutdown_sound,""); 
+          llMessageLinked(speaker,0,"stop",""); llMessageLinked(speaker,0,"shutdown_sound|"+shutdown_sound,""); 
           if(long_clip_switch == TRUE){llMessageLinked(LINK_THIS,0,"long_sound_pause",""); shutdown(); return;}
           shutdown();
           }
