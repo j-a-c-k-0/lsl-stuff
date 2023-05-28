@@ -311,27 +311,27 @@ default
         counter = 0;
         if(state_position == 1)
         {
+        llOwnerSay("position1 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot());  
         llStopAnimation(animation_hold); llStartAnimation(animation_aim); 
         llSetLinkPrimitiveParamsFast(turn1,[PRIM_DESC,(string)llGetLocalPos()+"="+(string)llGetLocalRot()]); state_position =2;
         list items0 = llParseString2List(default_positions2, ["="], []);
         llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POS_LOCAL,(vector)llList2String(items0,0),PRIM_ROT_LOCAL,(rotation)llList2String(items0,1)]);
-        llOwnerSay("position1 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot());
         return;
         }
         if(state_position == 2)
         {
+        llOwnerSay("position2 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot());  
         llStartAnimation(animation_hold); llStopAnimation(animation_aim); 
         llSetLinkPrimitiveParamsFast(turn2,[PRIM_DESC,(string)llGetLocalPos()+"="+(string)llGetLocalRot()]); state_position =3;
         list items0 = llParseString2List(default_positions3, ["="], []);
         llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POS_LOCAL,(vector)llList2String(items0,0),PRIM_ROT_LOCAL,(rotation)llList2String(items0,1)]);
-        llOwnerSay("position2 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot());
         return;
         }
         if(state_position == 3)
         {
+        llOwnerSay("position3 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot()); 
         llStopAnimation(animation_hold); llStopAnimation(animation_aim); 
         llSetLinkPrimitiveParamsFast(turn3,[PRIM_DESC,(string)llGetLocalPos()+"="+(string)llGetLocalRot()]);
-        llOwnerSay("position3 : "+(string)llGetLocalPos()+"="+(string)llGetLocalRot());
         llSetTimerEvent(0); state_position =1;
         state default;
     } } }
