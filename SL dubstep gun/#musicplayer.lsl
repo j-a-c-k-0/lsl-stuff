@@ -18,7 +18,7 @@ playmusic()
     if (music_num < llGetListLength(music_song))
     {
     list A = llParseString2List(llList2String(music_song, music_num), ["="], []);
-    music_timing = llList2Float(A,0);llMessageLinked(speaker,0,"play|"+llList2String(A,1),""); music_num += 1;
+    music_timing = llList2Float(A,0);llMessageLinked(speaker,0,"play_long|"+llList2String(A,1)+"|"+llList2String(A,0),""); music_num += 1;
     list B = llParseString2List(llList2String(music_song, music_num), ["="], []);
     if((key)llList2String(B,1)){ llPreloadSound(llList2String(B,1));
     }else{
