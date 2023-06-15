@@ -1,6 +1,7 @@
 string music_selection = "none";
 integer ichannel = 978461;
 integer cur_page = 1;
+integer radius_link;
 integer chanhandlr;
 integer slist_size;
 integer animated0;
@@ -15,6 +16,7 @@ startup()
 animated0 = getLinkNum("gif1");
 animated1 = getLinkNum("gif2");
 speaker = getLinkNum("speaker");
+radius_link = getLinkNum("starget");
 particle1 = getLinkNum("particle1");
 particle2 = getLinkNum("particle2");
 songlist = list_inv(INVENTORY_NOTECARD); slist_size = llGetListLength(songlist); songlist = llListSort(songlist,1, TRUE);
@@ -77,6 +79,7 @@ dialog_songmenu(integer page)
     llDialog(llGetOwner(),"Music = "+music_selection+"\n\n"+ llDumpList2String(snlist, "\n"),order_buttons(dbuf + ["<<<", "[ main ]", ">>>"]),ichannel);
 }
 string checklist(string A){if(!llGetListLength(songlist)){return "none";}else{return A;}}
+string check_output(float A){if(.01<=A){return(string)A;}return"OFF";}
 search_music(string search)
 {
 integer Lengthx = llGetListLength(songlist); integer x;
@@ -94,20 +97,22 @@ for ( ; x < Lengthx; x += 1)
 } }llOwnerSay("Could not find anything"); llMessageLinked(LINK_THIS, 0,"mainmenu_request","");}
 option_topmenu()
 {
+list item =llGetLinkPrimitiveParams(radius_link,[PRIM_DESC]);
 list target =llGetLinkPrimitiveParams(speaker,[PRIM_DESC]);
 integer music_list = llGetListLength(songlist); 
 integer page= (music_list / 9) + 1 ;
 llTextBox(llGetOwner(),
-"[ Status ]"+"\n"+
+"\n"+"[ Status ]"+"\n\n"+
 "Memory = "+(string)llGetFreeMemory()+"\n"+
-"Volume = "+(string)llList2String(target,0)+"\n"+
+"Sound Radius = "+(string)llDeleteSubString(llList2String(item,0),4,100)+"\n"+
+"Volume = "+(string)llDeleteSubString(llList2String(target,0),4,100)+"\n"+
 "Musics = "+(string)(music_list-1)+"\n"+
 "Page = "+(string)page+"\n\n"+
 "[ Command Format ]"+"\n\n"+
 "Search > ( s/music )"+"\n"+
 "Volume > ( v/0.5 )"+"\n"+
-"Page > ( p/1 )"
-,ichannel); 
+"Radius > ( r/0 )"+"\n"+
+"Page > ( p/1 )"+"\n",ichannel);
 }
 default
 {
@@ -129,18 +134,17 @@ default
     }
     link_message(integer source, integer num, string str, key id)
     {
-       if(str == "song_request"){random_channel(); dialog_songmenu(cur_page);}
-       if(str == "option_request"){random_channel(); option_topmenu();}
-       if(str == "[ Reset ]"){llResetScript();}
-       if(str == "random_request")
-       {
-       llSetLinkPrimitiveParamsFast(animated0,[PRIM_DESC,""]);
-       string Random = llList2String(songlist,llFloor(llFrand(llGetListLength(songlist)))); music_selection = Random;
-       llSetLinkPrimitiveParamsFast(particle2,[PRIM_DESC,checklist(music_selection)+"="+(string)llGetFreeMemory()]);
-       llMessageLinked(LINK_THIS,0,"erase_data","");llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+Random,"");
-       llMessageLinked(LINK_THIS, 0,"mainmenu_request","");
-       }
-    }
+      if(str == "song_request"){random_channel(); dialog_songmenu(cur_page);}
+      if(str == "option_request"){random_channel(); option_topmenu();}
+      if(str == "[ Reset ]"){llResetScript();}
+      if(str == "random_request")
+      {
+      llSetLinkPrimitiveParamsFast(animated0,[PRIM_DESC,""]);
+      string Random = llList2String(songlist,llFloor(llFrand(llGetListLength(songlist)))); music_selection = Random;
+      llSetLinkPrimitiveParamsFast(particle2,[PRIM_DESC,checklist(music_selection)+"="+(string)llGetFreeMemory()]);
+      llMessageLinked(LINK_THIS,0,"erase_data","");llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+Random,"");
+      llMessageLinked(LINK_THIS, 0,"mainmenu_request","");
+    } }
     listen(integer chan, string sname, key skey, string text)
     {
     list target1 =llGetLinkPrimitiveParams(animated1,[PRIM_DESC]); if(llList2String(target1,0) == "firing"){return;}
@@ -149,9 +153,15 @@ default
     {
           if(llList2String(items0,0) == "s"){search_music(llList2String(items0,1));}
           if(llList2String(items0,0) == "p"){dialog_songmenu((integer)llList2String(items0,1));}
+          if(llList2String(items0,0) == "r")
+          {
+          llSetLinkPrimitiveParamsFast(radius_link,[PRIM_DESC,check_output(llList2Float(items0,1))]);
+          llMessageLinked(LINK_THIS,0,"mainmenu_request","");
+          llMessageLinked(speaker,0,"sound_range","");
+          }
           if(llList2String(items0,0) == "v")
           {
-          llSetLinkPrimitiveParamsFast(speaker,[PRIM_DESC,(string)llList2Float(items0,1)]);
+          llSetLinkPrimitiveParamsFast(speaker,[PRIM_DESC,check_output(llList2Float(items0,1))]);
           llMessageLinked(LINK_THIS,0,"mainmenu_request","");
           llMessageLinked(speaker,0,"volume_change|"+(string)llList2Float(items0,1),"");
           }
@@ -164,7 +174,4 @@ default
           llMessageLinked(LINK_THIS,0,"erase_data","");llMessageLinked(LINK_THIS, 0,"fetch_note_rationed|"+llList2String(songlist,pnum),"");
           llSetLinkPrimitiveParamsFast(particle2,[PRIM_DESC,checklist(music_selection)+"="+(string)llGetFreeMemory()]);
           dialog_songmenu(cur_page);
-          }
-       }
-    }
- }
+    } } } }
