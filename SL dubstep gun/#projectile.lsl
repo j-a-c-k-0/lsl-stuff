@@ -231,11 +231,6 @@ default
     {
     if(PERMISSION_TAKE_CONTROLS & perm){llTakeControls( CONTROL_BACK|CONTROL_FWD, TRUE, TRUE );}
     }
-    link_message(integer sender_num, integer num, string msg, key id)
-    {
-    if(msg == "make_particle"){shockwave();}
-    if(msg == "stop_particle"){llLinkParticleSystem(LINK_SET,[]);}
-    }
     timer() 
     {
     list target0 =llGetLinkPrimitiveParams(particle0,[PRIM_DESC]);
