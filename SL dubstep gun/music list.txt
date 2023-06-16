@@ -1,3 +1,16 @@
+
+@SmashMouthAllStar
+shoot_timing=3.7
+idle_music=db78dc99-e71d-a41d-0f63-6937a2277bd5
+start_fire=ae4d372d-7ae6-16db-000a-1f4e360861a1
+shoot_sound=cd865889-71eb-2833-15a4-ae6baa6d61f7
+
+@SpongebobStadiumRave
+shoot_timing=1.8
+idle_music=0b4b5eb6-b8dc-cbef-b42f-a4f812733fbc
+start_fire=015ea95b-96e1-8e42-5f10-33fc23a56684
+shoot_sound=fe0fa1ec-2b29-3bb0-e3ef-68bae036554e
+
 @ArsenalPyramid
 shoot_timing=0.7
 idle_music=3cd94571-3553-43f7-31d9-240880fc3476
