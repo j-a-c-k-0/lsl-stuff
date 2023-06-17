@@ -1,4 +1,10 @@
 
+@KnifePartyCentipede
+shoot_timing=1.0
+idle_music=a0b448c1-d9b9-091d-bf0b-8bbf983b796c
+start_fire=5921b779-0d92-411f-8e39-51893f6e8eb8
+shoot_sound=91b4ab5f-9d09-6b66-860a-4770ae307e36
+
 @SmashMouthAllStar
 shoot_timing=3.7
 idle_music=db78dc99-e71d-a41d-0f63-6937a2277bd5
