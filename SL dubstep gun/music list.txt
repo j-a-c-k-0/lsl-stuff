@@ -1,4 +1,16 @@
 
+@LaunchkeyDubstepRemix
+shoot_timing=1.65
+idle_music=314af758-f953-f04a-91c7-8d2396d5cf87
+start_fire=8e2e4e33-2347-75c2-89ca-536d81704a35
+shoot_sound=d1b77b99-1860-0767-6a7b-dbe88249cbbc
+
+@PumpedupKicksRemix
+shoot_timing=1.45
+idle_music=5dbbbe4d-6067-b397-c8fb-ec96b7640259
+start_fire=8ae9b5df-114c-5491-666e-90a67a7a230c
+shoot_sound=0a2d88d0-1835-04ca-027e-c120bd0595fd
+
 @KnifePartyCentipede
 shoot_timing=1.0
 idle_music=a0b448c1-d9b9-091d-bf0b-8bbf983b796c
