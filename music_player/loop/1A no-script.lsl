@@ -106,7 +106,7 @@ default
             {
             llMessageLinked(LINK_THIS, 0, "add_music"+"|"+data, NULL_KEY);
             songlist += data; ++notecardLine;
-            notecardQueryId = llGetNotecardLine(notecardName, notecardLine); 
+            notecardQueryId = llGetNotecardLine(notecardName, notecardLine);
             }
         }
     }
