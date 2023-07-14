@@ -9,7 +9,6 @@ show_position()
     llOwnerSay("llSetLinkPrimitiveParamsFast("+llGetLinkName(i)+",[PRIM_POS_LOCAL,"+llList2String(A,1)+",PRIM_SIZE,"+llList2String(A,2)+",PRIM_ROT_LOCAL,"+llList2String(A,0)+"]);");
     counter = counter + 1;
     }
-    counter = 1;
 }
 default
 {
