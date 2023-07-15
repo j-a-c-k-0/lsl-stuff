@@ -88,7 +88,7 @@ default
             float fvel=llVecMag(llList2Vector(d,0));
             if(fvel > self_velocity_durability)
             {
-            destroyed_link(detect_link_collision,linked_object,(llList2Vector(d,0)/llGetLocalRot()),self_deformation_intensity);
+            destroyed_link(detect_link_collision,linked_object,(-llList2Vector(d,0)/llGetLocalRot()),self_deformation_intensity);
             }
             float fve = llVecMag(llDetectedVel(i))+llVecMag(llGetVel());   
             if(fve > velocity_durability)
