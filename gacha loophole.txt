@@ -1,7 +1,8 @@
-integer inventory_type = INVENTORY_SOUND; 
+integer inventory_type = INVENTORY_OBJECT; 
 integer counter_time = 50; 
 integer counter; 
-integer price = 15; 
+integer display_text = LINK_THIS; 
+integer price = 50; 
 string random_item;
 random_items()
 {
@@ -10,7 +11,7 @@ random_item = Random;
 }
 text_display()
 {
-llSetText("timer : "+(string)counter+"\n"+"music : "+random_item,<1,1,1>,1);
+llSetLinkPrimitiveParamsFast(display_text, [PRIM_TEXT,"timer : "+(string)(counter_time-counter)+"\n"+"music : "+random_item,<1,1,1>,1]);
 }
 default
 {
@@ -34,6 +35,7 @@ default
     random_items(); 
     llSetTimerEvent(1);
     llSetPayPrice(PAY_HIDE, [price ,PAY_HIDE, PAY_HIDE, PAY_HIDE]); 
+    llSetLinkPrimitiveParamsFast(display_text, [PRIM_TEXT,"",<1,1,1>,1]);
     text_display();
     }
     touch_start(integer number)
