@@ -1,8 +1,8 @@
 integer inventory_type = INVENTORY_OBJECT; 
-integer counter_time = 50; 
-integer counter; 
 integer display_text = LINK_THIS; 
+integer counter_time = 50; 
 integer price = 50; 
+integer counter; 
 string random_item;
 random_items()
 {
