@@ -23,3 +23,20 @@ default
     llRemoveInventory(llGetScriptName());
     }
 }
+
+...................................................................................................................................................................................................
+
+integer getLinkNum(string primName)
+{
+integer primCount = llGetNumberOfPrims();
+integer i;
+for (i=0; i<primCount+1;i++){  
+if (llGetLinkName(i)==primName) return i;
+}return FALSE;}
+
+
+
+
+getLinkNum("")
+
+
