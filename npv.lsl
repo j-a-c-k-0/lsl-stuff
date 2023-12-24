@@ -156,10 +156,14 @@ default
       {
         if(avoid_mode == TRUE)
         {
+        stop_animation();
+        llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));   
         llRegionSayTo(agent,0,"exiting deflection mode"); 
         avoid_mode = FALSE;
         reset();llSleep(1);
         }else{
+        stop_animation();
+        llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));  
         llRegionSayTo(agent,0,"starting deflection mode"); 
         avoid_mode = TRUE; 
         avoid();llSleep(1);
@@ -235,7 +239,7 @@ default
       movementDirection.x--; llStartAnimation("Walk");
       if(switch_mode == FALSE){llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD, 180.0000 * DEG_TO_RAD>)]);}
       }
-      if(levels & CONTROL_FWD) {if(avoid_mode == FALSE){movementDirection.x++; llStartAnimation("Walk");}}
+      if(levels & CONTROL_FWD){if(avoid_mode == FALSE){movementDirection.x++; llStartAnimation("Walk");}}
       if(levels & CONTROL_DOWN){movementDirection.z--; llStartAnimation("Flying Down");}
       if(levels & CONTROL_UP){movementDirection.z++; llStartAnimation("Flying Up");}
       if(levels & CONTROL_LEFT){rotationDirection++; llStartAnimation("turning_left");}
