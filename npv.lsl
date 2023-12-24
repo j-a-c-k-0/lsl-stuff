@@ -234,11 +234,12 @@ default
         llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD,0 * DEG_TO_RAD>)]);
         return;
       } }
-      if(levels & CONTROL_BACK) 
+      if(levels & CONTROL_BACK){if(avoid_mode == FALSE)
       {
-      movementDirection.x--; llStartAnimation("Walk");
-      if(switch_mode == FALSE){llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD, 180.0000 * DEG_TO_RAD>)]);}
-      }
+        movementDirection.x--; llStartAnimation("Walk");
+        if(switch_mode == FALSE){llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD, 180.0000 * DEG_TO_RAD>)]);}
+        return;
+      } }
       if(levels & CONTROL_FWD){if(avoid_mode == FALSE){movementDirection.x++; llStartAnimation("Walk");}}
       if(levels & CONTROL_DOWN){movementDirection.z--; llStartAnimation("Flying Down");}
       if(levels & CONTROL_UP){movementDirection.z++; llStartAnimation("Flying Up");}
