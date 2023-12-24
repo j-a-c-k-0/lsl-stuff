@@ -1,37 +1,5 @@
-list animations 
-=[
-"Flying Down",
-"Flying Up",
-"Walk",
-"turning_left",
-"turning_right"
-];
-
-list animations_stand 
-=[ 
-"stand0",
-"stand1",
-"stand2",
-"stand3",
-"stand4",
-"stand5",
-"stand6",
-"stand7",
-"stand8",
-"stand9",
-"stand10"
-];
-
-string message_startup 
-="\n
-[ W+S+E = increase speed ]\n
-[ W+S+C = reset speed ]\n
-[ E+C+W = avoid ]\n
-[ W+S = follower ]\n
-[ E+C = off sim mode ]\n
-[ A+D = teleport by look at ]
-";
-
+list animations_stand =[ "stand0","stand1","stand2","stand3","stand4","stand5","stand6","stand7","stand8","stand9","stand10"];
+list animations =["Flying Down","Flying Up","Walk","turning_left","turning_right"];
 vector default_local_position = <0,0,1.5>;
 vector movementDirection;
 vector gPointerPos;
@@ -51,6 +19,16 @@ float speed_Pos=0.2;
 float coune;
 key target;
 key agent;
+
+string message_startup 
+="\n
+[ W+S+E = increase speed ]\n
+[ W+S+C = reset speed ]\n
+[ E+C+W = deflection ]\n
+[ W+S = follower ]\n
+[ E+C = off sim mode ]\n
+[ A+D = teleport by look at ]
+";
 
 list CastDaRay(vector start, rotation direction)
 {
@@ -95,9 +73,10 @@ runtime()
 integer distance_avoid = 20; 
 reset()
 {
+llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,<0,0,0>]);
+llTargetOmega(<0,0,0>,TWO_PI,0);
+llSleep(1);  
 llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_ROTATION,<0,0,0,0>]); 
-llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,<0,0,0>]);  
-llTargetOmega(<0,0,0>,TWO_PI,1.0);
 }
 avoid()
 {
@@ -111,7 +90,7 @@ if(target_confirm == FALSE)
 { 
 llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos-<0,50+distance_avoid,0>]);
 }
-llTargetOmega(<0,0,0>,TWO_PI,1.0);
+llTargetOmega(<0,0,0>,TWO_PI,0);
 }
 follower()
 {
@@ -150,30 +129,9 @@ default
     {
         if(perm & PERMISSION_TAKE_CONTROLS)
         {
-
-        llSetCameraParams(
-        [
-        CAMERA_ACTIVE,TRUE,
-        CAMERA_BEHINDNESS_ANGLE,5.0,
-        CAMERA_BEHINDNESS_LAG,0.1,
-        CAMERA_DISTANCE,7.0,CAMERA_FOCUS_LAG,0.0,
-        CAMERA_FOCUS_OFFSET,<0.0,0.0,1.0>,
-        CAMERA_FOCUS_THRESHOLD,0.5,
-        CAMERA_PITCH,5.0
-        ]);
-
-        llTakeControls(
-        CONTROL_BACK |
-        CONTROL_FWD |
-        CONTROL_LEFT |
-        CONTROL_RIGHT |
-        CONTROL_ROT_LEFT |
-        CONTROL_ROT_RIGHT |
-        CONTROL_DOWN |
-        CONTROL_UP,TRUE,
-        FALSE
-        );
-
+        llSetCameraParams([CAMERA_ACTIVE,TRUE,CAMERA_BEHINDNESS_ANGLE,5.0,CAMERA_BEHINDNESS_LAG,0.1,CAMERA_DISTANCE,7.0,
+        CAMERA_FOCUS_LAG,0.0,CAMERA_FOCUS_OFFSET,<0.0,0.0,1.0>,CAMERA_FOCUS_THRESHOLD,0.5,CAMERA_PITCH,5.0]);
+        llTakeControls(CONTROL_BACK|CONTROL_FWD|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_DOWN|CONTROL_UP,TRUE,FALSE);
         llRegionSayTo(agent,0,message_startup);
         llStopAnimation("sit");
         llSetTimerEvent(0.01);
@@ -186,19 +144,14 @@ default
     }
     changed(integer change)
     { 
-        if(permission == FALSE)
-        {
-            if (change & CHANGED_LINK)
-            {
-                agent = llAvatarOnSitTarget();
-                if (agent)
-                {
-                llRequestPermissions(agent,PERMISSION_TAKE_CONTROLS | PERMISSION_TRIGGER_ANIMATION
-                | PERMISSION_CONTROL_CAMERA |  PERMISSION_TRACK_CAMERA);
-                }
-            }
-        }
-    }
+    if(permission == FALSE){if (change & CHANGED_LINK)
+    {
+       agent = llAvatarOnSitTarget();
+       if (agent)
+       {
+       llRequestPermissions(agent,PERMISSION_TAKE_CONTROLS | PERMISSION_TRIGGER_ANIMATION
+       | PERMISSION_CONTROL_CAMERA |  PERMISSION_TRACK_CAMERA);
+    }}}}
     listen(integer c,string n, key i, string m)
     {
     if(llGetOwnerKey(i)==agent){if((key)m){target_confirm = TRUE;    target = m;}}  
@@ -211,11 +164,11 @@ default
       {
         if(avoid_mode == TRUE)
         {
-        llRegionSayTo(agent,0,"reset"); 
+        llRegionSayTo(agent,0,"exiting deflection mode"); 
         avoid_mode = FALSE;
         reset();llSleep(1);
         }else{
-        llRegionSayTo(agent,0,"avoid"); 
+        llRegionSayTo(agent,0,"starting deflection mode"); 
         avoid_mode = TRUE; 
         avoid();llSleep(1);
         }return;
@@ -278,32 +231,29 @@ default
       vector agent = llGetAgentSize(agent);
       if(agent)
       {
-      if (~levels & edges)
+      if(~levels & edges)
       {
          stop_animation();
          llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));
          llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD,0 * DEG_TO_RAD>)]);
          return;
       }
-      if (levels & CONTROL_BACK) 
+      if(levels & CONTROL_BACK) 
       {
       movementDirection.x--; llStartAnimation("Walk");
       if(switch_mode == FALSE){llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD, 180.0000 * DEG_TO_RAD>)]);}
       }
-      if (levels & CONTROL_FWD) {movementDirection.x++; llStartAnimation("Walk");}
-      if (levels & CONTROL_DOWN){movementDirection.z--; llStartAnimation("Flying Down");}
-      if (levels & CONTROL_UP){movementDirection.z++; llStartAnimation("Flying Up");}
-      if (levels & CONTROL_LEFT){rotationDirection++; llStartAnimation("turning_left");}
-      if (levels & CONTROL_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
-      if (levels & CONTROL_ROT_LEFT){rotationDirection++; llStartAnimation("turning_left");}
-      if (levels & CONTROL_ROT_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
-      }
-    } 
+      if(levels & CONTROL_FWD) {movementDirection.x++; llStartAnimation("Walk");}
+      if(levels & CONTROL_DOWN){movementDirection.z--; llStartAnimation("Flying Down");}
+      if(levels & CONTROL_UP){movementDirection.z++; llStartAnimation("Flying Up");}
+      if(levels & CONTROL_LEFT){rotationDirection++; llStartAnimation("turning_left");}
+      if(levels & CONTROL_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
+      if(levels & CONTROL_ROT_LEFT){rotationDirection++; llStartAnimation("turning_left");}
+      if(levels & CONTROL_ROT_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
+    } } 
     timer()
     {
     if(permission == TRUE)
     {   
     if(llGetAgentInfo(agent) & AGENT_SITTING){unsit_all();follower();runtime();coune = 0;}else{if(coune>timelim){llDie();}else{coune = coune + 1;}}
-    }     
-  } 
-}
+} } }
