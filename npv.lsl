@@ -224,33 +224,30 @@ default
          llSleep(1);
          }return;
       }
-      vector agent = llGetAgentSize(agent);
-      if(agent)
-      {
-      if(~levels & edges){if(avoid_mode == FALSE)
+      if(~levels & edges)
       {
         stop_animation();
         llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));
         llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD,0 * DEG_TO_RAD>)]);
         return;
-      } }
-      if(levels & CONTROL_BACK){if(avoid_mode == FALSE)
+      }
+      if(levels & CONTROL_BACK)
       {
         movementDirection.x--; llStartAnimation("Walk");
         if(switch_mode == FALSE){llSetLinkPrimitiveParamsFast(2, [PRIM_ROT_LOCAL,llEuler2Rot(<0 * DEG_TO_RAD,0* DEG_TO_RAD, 180.0000 * DEG_TO_RAD>)]);}
         return;
-      } }
-      if(levels & CONTROL_FWD){if(avoid_mode == FALSE){movementDirection.x++; llStartAnimation("Walk");}}
+      }
+      if(levels & CONTROL_FWD){movementDirection.x++; llStartAnimation("Walk");}
       if(levels & CONTROL_DOWN){movementDirection.z--; llStartAnimation("Flying Down");}
       if(levels & CONTROL_UP){movementDirection.z++; llStartAnimation("Flying Up");}
       if(levels & CONTROL_LEFT){rotationDirection++; llStartAnimation("turning_left");}
       if(levels & CONTROL_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
       if(levels & CONTROL_ROT_LEFT){rotationDirection++; llStartAnimation("turning_left");}
       if(levels & CONTROL_ROT_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
-    } } 
-    timer()
-    {
-    if(permission == TRUE)
-    {   
-    if(llGetAgentInfo(agent) & AGENT_SITTING){unsit_all();follower();runtime();coune = 0;}else{if(coune>timelim){llDie();}else{coune = coune + 1;}}
-} } }
+      } 
+      timer()
+      {
+      if(permission == TRUE)
+      {   
+      if(llGetAgentInfo(agent) & AGENT_SITTING){unsit_all();follower();runtime();coune = 0;}else{if(coune>timelim){llDie();}else{coune = coune + 1;}}
+  } } }
