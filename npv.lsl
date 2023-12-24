@@ -32,13 +32,10 @@ string message_startup
 
 list CastDaRay(vector start, rotation direction)
 {
-    list results = llCastRay(
-        start,
-        start+<255.0,0.0,0.0>*direction,
-        [RC_REJECT_TYPES, RC_REJECT_AGENTS,
-        RC_DETECT_PHANTOM,TRUE,
-        RC_DATA_FLAGS,RC_GET_NORMAL,RC_MAX_HITS,1]);
-    return results;
+list results = llCastRay(start,start+<255.0,0.0,0.0>*direction,
+[RC_REJECT_TYPES, RC_REJECT_AGENTS,RC_DETECT_PHANTOM,TRUE,
+RC_DATA_FLAGS,RC_GET_NORMAL,RC_MAX_HITS,1]);
+return results;
 }
 stop_animation() 
 {    
@@ -54,22 +51,20 @@ for ( ; x < Lengthx; x += 1){llStopAnimation(llList2String(animations_stand, x))
 }
 runtime()
 { 
-    if(switch_mode == FALSE)
-    {  
-    list od = llGetObjectDetails(llGetKey(), [OBJECT_POS, OBJECT_ROT]);
-    gPointerPos = llList2Vector(od, 0);gPointerRot = llList2Rot(od, 1);     
-    gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;
-    gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
-    if(avoid_mode == FALSE){llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos,PRIM_ROTATION,gPointerRot]);}
-    if(avoid_mode == TRUE){llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos]);}
-    }
+    if(switch_mode == FALSE){if(avoid_mode == FALSE)
+    {
+      list od = llGetObjectDetails(llGetKey(), [OBJECT_POS, OBJECT_ROT]);
+      gPointerPos = llList2Vector(od, 0);gPointerRot = llList2Rot(od, 1);     
+      gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;
+      gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
+      llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos,PRIM_ROTATION,gPointerRot]);
+    } }
     else
     {
     gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;  
     gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
     llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,gPointerPos,PRIM_ROT_LOCAL,gPointerRot]);
-    }
-}
+}   }
 integer distance_avoid = 20; 
 reset()
 {
@@ -101,9 +96,7 @@ follower()
     { 
     if(avoid_mode == TRUE){if(target_confirm == TRUE){llSetRegionPos(llList2Vector(a,0)-<0,distance_avoid,0>);}}      
     if(avoid_mode == FALSE){llSetRegionPos(llList2Vector(a,0));} 
-    }
-  }
-}
+} } }
 unsit_all()
 {
   integer objectPrimCount = llGetObjectPrimCount(llGetKey());
@@ -111,8 +104,7 @@ unsit_all()
   for (; objectPrimCount < currentLinkNumber; --currentLinkNumber)
   {
   if(llGetLinkKey(currentLinkNumber)==agent){ }else{llUnSit(llGetLinkKey(currentLinkNumber));}
-  }    
-}
+} }
 default
 {
     on_rez(integer start_param)
