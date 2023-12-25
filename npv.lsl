@@ -1,9 +1,34 @@
-list animations_stand =[ "stand0","stand1","stand2","stand3","stand4","stand5","stand6","stand7","stand8","stand9","stand10"];
-list animations =["Flying Down","Flying Up","Walk","turning_left","turning_right"];
-vector default_local_position = <0,0,1.5>;
-vector movementDirection;
-vector gPointerPos;
+list animations_stand 
+=[
+"stand0",
+"stand1",
+"stand2",
+"stand3",
+"stand4",
+"stand5",
+"stand6",
+"stand7",
+"stand8",
+"stand9",
+"stand10"
+];
+
+list animations
+=[
+"Flying Down",
+"Flying Up",
+"Walk",
+"turning_left",
+"turning_right"
+];
+
 rotation gPointerRot;
+
+vector avoid_offset = <0,20,0>;
+vector movementDirection;
+vector avatar_offset;
+vector gPointerPos;
+
 integer target_confirm = FALSE;
 integer switch_mode = FALSE;
 integer permission = FALSE;
@@ -11,12 +36,14 @@ integer avoid_mode = FALSE;
 integer rotationDirection;
 integer ichannel = 10909;
 integer chanhandlr;
-integer switch0;
+integer a = FALSE;
+
 float timelim = 200;
-float hover_offset=1;
-float speed_rot=0.02;
-float speed_Pos=0.2;
+float speed_rot = 0.02;
+float speed_Pos = 0.2;
+float event_timer = .01;
 float coune;
+
 key target;
 key agent;
 
@@ -30,6 +57,10 @@ string message_startup
 [ A+D = teleport by look at ]
 ";
 
+random()
+{
+ichannel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr); chanhandlr = llListen(ichannel, "", NULL_KEY, "");
+}
 list CastDaRay(vector start, rotation direction)
 {
 list results = llCastRay(start,start+<255.0,0.0,0.0>*direction,
@@ -51,24 +82,22 @@ for ( ; x < Lengthx; x += 1){llStopAnimation(llList2String(animations_stand, x))
 }
 runtime()
 { 
-    if(switch_mode == FALSE){if(avoid_mode == FALSE)
+    if(avoid_mode == TRUE){if(switch_mode == FALSE){switch_mode = TRUE; gPointerPos = avoid_offset;return;}}
+    if(switch_mode == FALSE)
     {
-      list od = llGetObjectDetails(llGetKey(), [OBJECT_POS, OBJECT_ROT]);
-      gPointerPos = llList2Vector(od, 0);gPointerRot = llList2Rot(od, 1);     
-      gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;
-      gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
-      llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos,PRIM_ROTATION,gPointerRot]);
-    } }
-    else
-    {
+    list od = llGetObjectDetails(llGetKey(), [OBJECT_POS, OBJECT_ROT]);
+    gPointerPos = llList2Vector(od, 0);gPointerRot = llList2Rot(od, 1);     
+    gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;
+    gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
+    llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos,PRIM_ROTATION,gPointerRot]);
+    }else{
     gPointerPos += movementDirection * speed_Pos * 1 * gPointerRot;  
     gPointerRot = llEuler2Rot(llRot2Euler(gPointerRot) + <0.0, 0.0, rotationDirection * speed_rot * PI>);
     llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,gPointerPos,PRIM_ROT_LOCAL,gPointerRot]);
-}   }
-integer distance_avoid = 20; 
+}   } 
 reset()
 {
-llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,<0,0,0>]);
+llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);
 llTargetOmega(<0,0,0>,TWO_PI,0);
 llSleep(1);  
 llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_ROTATION,<0,0,0,0>]); 
@@ -79,12 +108,9 @@ llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_ROTATION,<0,0,0,0>]);
 llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,<0,0,0>]);
 llSleep(1); 
 llTargetOmega(<0,0,.5>,TWO_PI,1.0);
-llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,<0,distance_avoid,0>]);
+llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avoid_offset]);
 llSleep(1);
-if(target_confirm == FALSE)
-{ 
-llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos-<0,50+distance_avoid,0>]);
-}
+if(target_confirm == FALSE){llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_POSITION,gPointerPos-avoid_offset]);}
 llTargetOmega(<0,0,0>,TWO_PI,0);
 }
 follower()
@@ -93,18 +119,22 @@ follower()
   {  
     list a = llGetObjectDetails(target, ([OBJECT_POS,OBJECT_PRIM_COUNT]));   
     if(llList2Integer(a,1) == 0){ }else
-    { 
-    if(avoid_mode == TRUE){if(target_confirm == TRUE){llSetRegionPos(llList2Vector(a,0)-<0,distance_avoid,0>);}}      
+    {
+    if(avoid_mode == TRUE){vector ovF = gPointerPos; llSetRegionPos((llList2Vector(a,0)-(<ovF.x,ovF.y,0>*llGetLocalRot())));}     
     if(avoid_mode == FALSE){llSetRegionPos(llList2Vector(a,0));} 
 } } }
-unsit_all()
+pilot()
 {
+  a = FALSE;  
   integer objectPrimCount = llGetObjectPrimCount(llGetKey());
   integer currentLinkNumber = llGetNumberOfPrims();
   for (; objectPrimCount < currentLinkNumber; --currentLinkNumber)
   {
-  if(llGetLinkKey(currentLinkNumber)==agent){ }else{llUnSit(llGetLinkKey(currentLinkNumber));}
-} }
+  if(llGetLinkKey(currentLinkNumber)==agent){a = TRUE;}else{llUnSit(llGetLinkKey(currentLinkNumber));}
+  }
+  if(a == TRUE){coune = 0;return;}
+  if(a == FALSE){if(coune>timelim){llDie();}else{coune = coune + 1;}}
+}
 default
 {
     on_rez(integer start_param)
@@ -113,7 +143,7 @@ default
     }
     state_entry()
     {
-    llSitTarget(<0,0,hover_offset>,llGetLocalRot());
+    llSitTarget(<0,1,0>,llGetLocalRot());
     llSetAlpha(1, ALL_SIDES);
     llVolumeDetect(TRUE);
     }
@@ -121,17 +151,20 @@ default
     {
         if(perm & PERMISSION_TAKE_CONTROLS)
         {
+        vector  size = llGetAgentSize(agent)*0.65;    
         llSetCameraParams([CAMERA_ACTIVE,TRUE,CAMERA_BEHINDNESS_ANGLE,5.0,CAMERA_BEHINDNESS_LAG,0.1,CAMERA_DISTANCE,7.0,
         CAMERA_FOCUS_LAG,0.0,CAMERA_FOCUS_OFFSET,<0.0,0.0,1.0>,CAMERA_FOCUS_THRESHOLD,0.5,CAMERA_PITCH,5.0]);
         llTakeControls(CONTROL_BACK|CONTROL_FWD|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_DOWN|CONTROL_UP,TRUE,FALSE);
         llRegionSayTo(agent,0,message_startup);
+        avatar_offset = <0,0,size.z>;      
         llStopAnimation("sit");
-        llSetTimerEvent(0.01);
         llSetAlpha(0, ALL_SIDES);
         llSetScale(<0,0,0>);
         permission = TRUE;
         stop_animation();
         llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));
+        llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);
+        llSetTimerEvent(event_timer);  
         }
     }
     changed(integer change)
@@ -146,19 +179,25 @@ default
     }}}}
     listen(integer c,string n, key i, string m)
     {
-    if(llGetOwnerKey(i)==agent){if((key)m){target_confirm = TRUE;    target = m;}}  
+      if(llGetOwnerKey(i)==agent)
+      {
+      if((key)m){target_confirm = TRUE; target = m;}
+      if(avoid_mode == TRUE){gPointerPos = avoid_offset;}
+      if(avoid_mode == FALSE){llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);}
+      }  
     }
     control(key name, integer levels, integer edges)
     {
       movementDirection = ZERO_VECTOR;
       rotationDirection = 0;
-      if (levels == 49) 
+      if(levels == 49) 
       {
         if(avoid_mode == TRUE)
         {
         stop_animation();
         llStartAnimation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));   
         llRegionSayTo(agent,0,"exiting deflection mode"); 
+        switch_mode = FALSE;
         avoid_mode = FALSE;
         reset();llSleep(1);
         }else{
@@ -170,7 +209,7 @@ default
         }return;
       }
       rotationDirection = 0;
-      if (levels == 768) 
+      if(levels == 768) 
       {
         list results = CastDaRay(llGetCameraPos(), llGetCameraRot());
         vector hit_pos = llList2Vector(results, 1);
@@ -179,50 +218,42 @@ default
         llSetRegionPos(hit_pos);
         }return;
       }
-      if (levels == 19) 
+      if(levels == 48) 
       {
-         speed_Pos = speed_Pos+1;
-         llRegionSayTo(agent,0,"set speed "+(string)speed_Pos);
-         llSleep(1);
-         return;
-      }
-      if (levels == 48) 
-      {
-         switch0 = !switch0;
-         if (switch0)
+         if(switch_mode == FALSE)
          {
          switch_mode = TRUE;
          llRegionSayTo(agent,0,"off sim mode");
-         gPointerPos = default_local_position;
+         gPointerPos = avatar_offset;
          llSleep(1);
          return;
          }else{
-         llSetLinkPrimitiveParamsFast(2, [PRIM_POS_LOCAL,default_local_position]);
+         llSetLinkPrimitiveParamsFast(2, [PRIM_POS_LOCAL,avatar_offset]);
          llRegionSayTo(agent,0,"normal mode");
          switch_mode = FALSE;
+         avoid_mode = FALSE;
          llSleep(1);
          }return;
-      } 
-      if (levels == 35) 
-      {
-         speed_Pos =0.2;
-         llRegionSayTo(agent,0,"reset speed");
-         llSleep(1);
-         return;
-      }     
-      if (levels == 3) 
+      }  
+      if(levels == 3) 
       { 
          if(target_confirm == FALSE)
-         {     
-         ichannel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr); 
-         chanhandlr = llListen(ichannel, "", NULL_KEY, "");
-         llTextBox(agent,"enter uuid",ichannel);
+         {
+         random(); llTextBox(agent,"enter uuid",ichannel);
          llSleep(1);
          }else{
          target_confirm = FALSE;
          target = "";
          llSleep(1);
          }return;
+      }
+      if(levels == 19)
+      {
+        speed_Pos = speed_Pos+1;llRegionSayTo(agent,0,"set speed "+(string)speed_Pos);llSleep(0.2);return;
+      }
+      if(levels == 35)
+      {
+        speed_Pos =0.2;llRegionSayTo(agent,0,"reset speed");llSleep(0.2);return;
       }
       if(~levels & edges)
       {
@@ -243,11 +274,13 @@ default
       if(levels & CONTROL_LEFT){rotationDirection++; llStartAnimation("turning_left");}
       if(levels & CONTROL_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
       if(levels & CONTROL_ROT_LEFT){rotationDirection++; llStartAnimation("turning_left");}
-      if(levels & CONTROL_ROT_RIGHT){rotationDirection--; llStartAnimation("turning_right");}
+      if(levels & CONTROL_ROT_RIGHT){rotationDirection--; llStartAnimation("turning_right");}    
       } 
       timer()
       {
-      if(permission == TRUE)
-      {   
-      if(llGetAgentInfo(agent) & AGENT_SITTING){unsit_all();follower();runtime();coune = 0;}else{if(coune>timelim){llDie();}else{coune = coune + 1;}}
-  } } }
+        if(permission == TRUE)
+        {
+        pilot();
+        follower();
+        runtime();
+    } } }
