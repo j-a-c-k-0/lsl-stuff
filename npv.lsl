@@ -19,13 +19,10 @@ string Flying_Down_animation = "Flying Down";
 string Flying_Up_animation = "Flying Up";
 string Walk_animation = "Walk";
 
-integer gesture_channel = 100;
-
-string inventory_gesture = "!npv menu [5]";
 string message = 
 "\n
 movement control ASDW\n
-[ /100 menu = menu ]
+[ E+C = menu ]
 [ W+S+C = reset speed ]
 [ W+S+E = increase speed ]
 ";
@@ -36,10 +33,12 @@ float speed_Pos = 0.2;
 float event_timer = .01;
 float coune;
 
+vector panic_offset = <800,800,100>;
 vector avoid_offset = <0,20,0>;
 vector movementDirection;
 vector avatar_offset;
 vector gPointerPos;
+vector previouspos;
 
 rotation gPointerRot;
 
@@ -48,6 +47,7 @@ integer switch_mode = FALSE;
 integer permission = FALSE;
 integer avoid_mode = FALSE;
 integer rotationDirection;
+integer gesture_channel = 100;
 integer ichannel = 10909;
 integer chanhandlr;
 integer a = FALSE;
@@ -78,13 +78,13 @@ CONTROL_DOWN|
 CONTROL_UP,
 TRUE,FALSE);
 }
-get_inventory(){if (llGetInventoryKey(inventory_gesture)==NULL_KEY){llOwnerSay("cannot find inventory item");}else{llGiveInventory(agent,inventory_gesture);}}
+string teleport_return(){if(previouspos != ZERO_VECTOR){return"[ return ]";}return"[ r̶e̶t̶u̶r̶n̶ ]";}
 string movement(){if(switch_mode == FALSE){return"[ default ]";}return"[ offset ]";}
 string follow(){if(target_confirm == FALSE){return"[ follow ]";}return"[ f̶o̶l̶l̶o̶w̶ ]";}
 string deflect(){if(avoid_mode == TRUE){return"[ a̶v̶o̶i̶d̶ ]";}return"[ avoid ]";}
 dialog_menu()
 {
-random(); llDialog(agent,"menu",([movement(),"[ teleport ]",deflect(),"[ panic ]",follow(),"[ gesture ]","[ exit ]","...","[ reset ]"]),ichannel);
+random(); llDialog(agent,"menu.",([movement(),"[ teleport ]",deflect(),"[ panic ]",teleport_return(),follow(),"[ exit ]","...","[ reset ]"]),ichannel);
 }
 random()
 {
@@ -92,7 +92,7 @@ ichannel = llFloor(llFrand(1000000) - 100000); llListenRemove(chanhandlr); chanh
 }
 list CastDaRay(vector start, rotation direction)
 {
-list results = llCastRay(start,start+<255.0,0.0,0.0>*direction,
+list results = llCastRay(start,start+<5000,0.0,0.0>*direction,
 [RC_REJECT_TYPES, RC_REJECT_AGENTS,RC_DETECT_PHANTOM,TRUE,
 RC_DATA_FLAGS,RC_GET_NORMAL,RC_MAX_HITS,1]);
 return results;
@@ -175,17 +175,17 @@ default
     }
     run_time_permissions(integer perm)
     {
-        if(perm & PERMISSION_TAKE_CONTROLS)
-        {
-        llSetTimerEvent(0);   
-        take_control_permissions();
-        vector  size = llGetAgentSize(agent)*0.65;
-        if(permission == FALSE){llListen(gesture_channel,"",agent,""); llRegionSayTo(agent,0,message); permission = TRUE;} 
-        avatar_offset = <0,0,size.z>; llStopAnimation("sit"); llSetAlpha(0, ALL_SIDES); llSetScale(<0,0,0>);
-        play_animation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));
-        llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);
-        llSetTimerEvent(event_timer);
-        }
+      if(perm & PERMISSION_TAKE_CONTROLS)
+      {
+      llSetTimerEvent(0);   
+      take_control_permissions();
+      vector  size = llGetAgentSize(agent)*0.65;
+      if(permission == FALSE){llListen(gesture_channel,"",agent,""); llRegionSayTo(agent,0,message); permission = TRUE;} 
+      avatar_offset = <0,0,size.z>; llStopAnimation("sit"); llSetAlpha(0, ALL_SIDES); llSetScale(<0,0,0>);
+      play_animation(llList2String(animations_stand,(integer)llFrand(llGetListLength(animations_stand))));
+      llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);
+      llSetTimerEvent(event_timer);
+      }
     }
     changed(integer change)
     { 
@@ -203,15 +203,16 @@ default
       if(llGetOwnerKey(i)==agent)
       {
       if(c == gesture_channel){ if(m == "menu"){dialog_menu();return;}}
-      if(m == "[ panic ]"){switch_mode = TRUE; gPointerPos = <llFloor(llFrand(5000)-5000),llFloor(llFrand(5000)-5000),llFloor(llFrand(5000)-5000)>;}
-      if(m == "[ offset ]"){llSetLinkPrimitiveParamsFast(2, [PRIM_POS_LOCAL,avatar_offset]);switch_mode = FALSE; avoid_mode = FALSE; llSleep(.5);}
+      if(m == "[ panic ]"){switch_mode = TRUE; gPointerPos = panic_offset; llSetLinkPrimitiveParamsFast(2, [PRIM_POS_LOCAL,panic_offset]);}
+      if(m == "[ offset ]"){llSetLinkPrimitiveParamsFast(2,[PRIM_POS_LOCAL,avatar_offset]);switch_mode = FALSE; avoid_mode = FALSE; llSleep(.5);}
+      if(m == "[ return ]"){if(previouspos != ZERO_VECTOR){llSetRegionPos(previouspos);}}
       if(m == "[ follow ]"){random(); llTextBox(agent,"enter uuid",ichannel); return;}
       if(m == "[ default ]"){switch_mode = TRUE; gPointerPos = avatar_offset;}  
-      if(m == "[ f̶o̶l̶l̶o̶w̶ ]"){target_confirm = FALSE; target = "";}
-      if(m == "[ gesture ]"){get_inventory();return;} 
+      if(m == "[ f̶o̶l̶l̶o̶w̶ ]"){target_confirm = FALSE; target = "";}  
       if(m == "[ exit ]"){return;}
       if(m == "[ reset ]")
       {
+         speed_Pos = 0.2; llRegionSayTo(agent,0,"restart take control.");
          llRequestPermissions(agent,PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION|PERMISSION_CONTROL_CAMERA|PERMISSION_TRACK_CAMERA);
       }
       if(m == "[ a̶v̶o̶i̶d̶ ]")
@@ -226,8 +227,8 @@ default
       }  
       if(m == "[ teleport ]")
       {
-        list results = CastDaRay(llGetCameraPos(), llGetCameraRot()); vector hit_pos = llList2Vector(results, 1);
-        if(hit_pos != ZERO_VECTOR){llSetRegionPos(hit_pos);}else{llSetRegionPos(llGetCameraPos());}
+        list results = CastDaRay(llGetCameraPos(),llGetCameraRot()); vector hit = llList2Vector(results,1);
+        if(hit != ZERO_VECTOR){previouspos = llGetPos();llSetRegionPos(hit);}else{previouspos = llGetPos();llSetRegionPos(llGetCameraPos());}
       }
       if((key)m)
       {
@@ -241,14 +242,19 @@ default
     {
       movementDirection = ZERO_VECTOR;
       rotationDirection = 0;
-      if(levels == 19)
+      if(levels == 48)
       {
-        speed_Pos = speed_Pos+1;llRegionSayTo(agent,0,"set speed "+(string)speed_Pos);llSleep(0.2);
+        dialog_menu();llSleep(0.2);
         return;
       }
       if(levels == 35)
       {
         speed_Pos = 0.2;llRegionSayTo(agent,0,"reset speed");llSleep(0.2);
+        return;
+      }
+      if(levels == 19)
+      {
+        speed_Pos = speed_Pos+1;llRegionSayTo(agent,0,"set speed "+(string)speed_Pos);llSleep(0.2);
         return;
       }
       if(~levels & edges)
